@@ -7,7 +7,7 @@ import { config } from "process";
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
-const baseUrl = process.env.BASE_URL || '/portfolio'
+const baseUrl = process.env.BASE_URL || '/portfolio';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
