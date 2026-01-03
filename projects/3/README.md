@@ -1,1 +1,0 @@
-Place project images for project 3 here.
