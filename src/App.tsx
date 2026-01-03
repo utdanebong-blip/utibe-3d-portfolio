@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom"; // <-- use HashRouter
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Home from "./pages/Home";
 import About from "./pages/About";
@@ -16,12 +16,13 @@ import { ScrollToTop } from "./components/ScrollToTop";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <TooltipProvider>
-    <Toaster />
-    <Sonner />
-    <BrowserRouter>
-      <ScrollToTop />
-      <Routes>
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <HashRouter>
+        <ScrollToTop />
+        <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/gallery" element={<Gallery />} />
@@ -30,9 +31,10 @@ const App = () => (
           <Route path="/blog/:id" element={<BlogPost />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="*" element={<NotFound />} />
-    </Routes>
-    </BrowserRouter>
-  </TooltipProvider>
+        </Routes>
+      </HashRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
 );
 
 export default App;

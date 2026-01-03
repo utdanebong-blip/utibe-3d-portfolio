@@ -3,6 +3,8 @@ import { Layout } from '@/components/layout';
 import { posts } from '@/hooks/usePortfolioData';
 import { Calendar, Tag, ArrowRight, BookOpen, Clock, Sparkles } from 'lucide-react';
 
+export const hashLink = (path: string) => `#${path}`;
+
 export default function Blog() {
   const featuredPost = posts[0];
   const otherPosts = posts.slice(1);
@@ -53,7 +55,7 @@ export default function Blog() {
           {featuredPost && (
             <div className="mb-16 -mt-8">
               <Link
-                to={`/portfolio/blog/${featuredPost.id}`}
+                to={`/blog/${featuredPost.id}`}
                 className="group block relative rounded-2xl overflow-hidden bg-card border border-border hover:border-primary/50 transition-all duration-500"
               >
                 <div className="grid lg:grid-cols-2 gap-0">

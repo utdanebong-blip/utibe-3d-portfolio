@@ -7,6 +7,8 @@ import { ArrowLeft, Box, Layers, Grid3X3, RotateCcw, ExternalLink } from 'lucide
 import { Button } from '@/components/ui/button';
 
 type ViewMode = 'rendered' | 'wireframe' | 'uv' | '3d';
+export const hashLink = (path: string) => `#${path}`;
+
 
 export default function ProjectDetail() {
   const { id } = useParams();
