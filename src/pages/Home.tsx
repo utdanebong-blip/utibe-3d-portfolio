@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
 import { Layout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Box, Sparkles, Download, Calendar, Clock, ChevronRight, Palette, Layers, Lightbulb, GraduationCap, Gamepad2, Zap, Building2, Building2 } from 'lucide-react';
-import { projects, plugins, posts } from '@/hooks/usePortfolioData';
+import { ArrowRight, Box, Sparkles, Download, Calendar, Clock, ChevronRight, Palette, Layers, Lightbulb, GraduationCap, Gamepad2, Zap, Building2, Building2, MapPin } from 'lucide-react';
+import { projects, plugins, posts, archvizProjects } from '@/hooks/usePortfolioData';
 import { useEffect, useRef, useState } from 'react';
 
 function TypingQuote() {
@@ -100,6 +100,7 @@ function TypingName() {
 export default function Home() {
   const featuredProjects = projects.slice(0, 3);
   const latestPosts = posts.slice(0, 3);
+  const featuredArchviz = archvizProjects.slice(0, 2);
 
   return (
     <Layout>
@@ -262,6 +263,84 @@ export default function Home() {
         </div>
       </section>
 
+{/* Archviz Section */}
+      <section className="py-24 relative bg-gradient-to-b from-card/30 via-background to-background">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-accent/10 border border-accent/30">
+                  <Building2 className="w-5 h-5 text-accent" />
+                </div>
+                <span className="font-mono text-xs text-accent tracking-widest uppercase">Architecture</span>
+              </div>
+              <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground">
+                Architectural <span className="text-accent text-glow-purple">Visualization</span>
+              </h2>
+              <p className="font-body text-muted-foreground mt-3 max-w-lg">
+                Photorealistic renders and immersive walkthroughs for residential and commercial projects.
+              </p>
+            </div>
+            <Link to="/gallery">
+              <Button variant="ghost" className="font-mono gap-2 text-muted-foreground hover:text-accent uppercase text-xs tracking-wider">
+                View All Archviz <ArrowRight size={14} />
+              </Button>
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {featuredArchviz.map((project, index) => (
+              <Link
+                key={project.id}
+                to={`/archviz/${project.id}`}
+                className="group relative rounded-2xl overflow-hidden border border-border/30 hover:border-accent/30 transition-all duration-700 animate-fade-in"
+                style={{ animationDelay: `${index * 0.15}s` }}
+              >
+                <div className="aspect-[16/9] overflow-hidden relative">
+                  <img
+                    src={project.thumbnail}
+                    alt={project.title}
+                    className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-background/50 to-transparent" />
+                  
+                  {/* Status badge */}
+                  <div className="absolute top-6 right-6">
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm ${
+                      project.specs.status === 'Completed' 
+                        ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
+                        : project.specs.status === 'In Development'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        : 'bg-accent/20 text-accent border border-accent/30'
+                    }`}>
+                      {project.specs.status}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="absolute bottom-0 left-0 right-0 p-8">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+                    <MapPin size={12} className="text-accent" />
+                    <span>{project.specs.location}</span>
+                    <span className="text-border">•</span>
+                    <span>{project.specs.area}</span>
+                  </div>
+                  <h3 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2 group-hover:text-accent transition-colors">
+                    {project.title}
+                  </h3>
+                  <p className="font-body text-sm text-muted-foreground line-clamp-2 max-w-lg">
+                    {project.description}
+                  </p>
+                  <div className="flex items-center gap-2 mt-4 text-accent font-body text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                    View Project <ChevronRight size={14} />
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Skills Overview */}
       <section className="py-24 border-y border-border/30">

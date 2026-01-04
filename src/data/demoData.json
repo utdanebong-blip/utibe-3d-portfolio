@@ -307,6 +307,57 @@
       "process": "Sculpted wood grain details in ZBrush, retopologized in Blender for optimal game performance, hand-painted wear and tear details in Substance Painter."
     },
     {
+      "id": "4",
+      "title": "Water Drum",
+      "description": "Gas Cylinder: This game prop model is a highly detailed 3D representation of a worn-out and old gas cylinder. Textured with meticulous attention to detail, the weathered and distressed appearance gives it a sense of history. The model features realistic markings and embellishments that bring it to life. Cooking Pot: This game prop model is a 3D representation of a worn-out and old cooking pot. Textured with meticulous attention to detail, the weathered and distressed appearance gives it a sense of history. The pot's handle and lid are functional and can be moved and posed for added realism. The model features realistic markings and embellishments that bring it to life.",
+      "thumbnail": "https://cdnb.artstation.com/p/marketplace/presentation_assets/002/919/435/large/file.jpg?1691515244",
+      "images": {
+        "rendered": "https://cdna.artstation.com/p/marketplace/presentation_assets/002/919/430/large/file.jpg?1691515139",
+        "wireframe": "https://cdna.artstation.com/p/marketplace/presentation_assets/002/919/434/large/file.jpg?1691515224",
+        "uv": "https://cdnb.artstation.com/p/marketplace/presentation_assets/002/919/429/large/file.jpg?1691515122",
+        "renderedExtras": [
+          {
+            "src": "https://cdna.artstation.com/p/marketplace/presentation_assets/002/919/432/large/file.jpg?1691515188",
+            "link": ""
+          },
+          {
+            "src": "https://cdnb.artstation.com/p/marketplace/presentation_assets/002/919/431/large/file.jpg?1691515170",
+            "link": ""
+          },
+          {
+            "src": "https://cdna.artstation.com/p/marketplace/presentation_assets/002/919/430/large/file.jpg?1691515139",
+            "link": ""
+          },
+          {
+            "src": "https://cdnb.artstation.com/p/marketplace/presentation_assets/002/919/435/large/file.jpg?1691515244",
+            "link": ""
+          },
+          {
+            "src": "https://cdna.artstation.com/p/marketplace/presentation_assets/002/919/436/large/file.jpg?1691515260",
+            "link": ""
+          },
+          {
+            "src": "https://cdna.artstation.com/p/marketplace/presentation_assets/002/919/438/large/file.jpg?1691515295",
+            "link": ""
+          }
+          
+        ]
+      },
+        "glb": "/assets/models/project-3-cyberpunk-vending-machine.glb",
+      "specs": {
+        "polyCount": 1900,
+        "vertexCount": 200,
+        "texelDensity": "768 px/m",
+        "materialSlots": 4,
+        "textureResolution": "4K",
+        "fileSize": "62 MB"
+      },
+      "software": ["3Ds Max", "Substance Painter", "Vray"],
+      "category": "Props",
+      "createdAt": "2024-03-10",
+      "process": "Hard-surface modeled in Blender using boolean operations, created custom decals and holographic materials, added emissive maps for neon lighting effects."
+    },
+    {
       "id": "3",
       "title": "Gas Cylinder and Cooking Pot",
       "description": "Gas Cylinder: This game prop model is a highly detailed 3D representation of a worn-out and old gas cylinder. Textured with meticulous attention to detail, the weathered and distressed appearance gives it a sense of history. The model features realistic markings and embellishments that bring it to life. Cooking Pot: This game prop model is a 3D representation of a worn-out and old cooking pot. Textured with meticulous attention to detail, the weathered and distressed appearance gives it a sense of history. The pot's handle and lid are functional and can be moved and posed for added realism. The model features realistic markings and embellishments that bring it to life.",
@@ -340,6 +391,7 @@
             "src": "https://cdna.artstation.com/p/assets/images/images/065/848/014/small/caption-pot-ba.jpg?1691400483",
             "link": ""
           }
+          
         ]
       },
         "glb": "/assets/models/project-3-cyberpunk-vending-machine.glb",
@@ -355,6 +407,55 @@
       "category": "Props",
       "createdAt": "2024-03-10",
       "process": "Hard-surface modeled in Blender using boolean operations, created custom decals and holographic materials, added emissive maps for neon lighting effects."
+    }
+    
+  ],
+  "archvizProjects": [
+    {
+      "id": "a1",
+      "title": "Coastal Family Residence",
+      "description": "A modern coastal residence balancing warm materials and expansive glazing to capture ocean views. The project focuses on daylight performance and material tactility.",
+      "thumbnail": "https://cdnb.artstation.com/p/assets/images/images/065/751/823/large/caption-bamboo-houserendered-mat.jpg?1691123035",
+      "images": {
+        "exterior": "https://cdna.artstation.com/p/assets/images/images/065/751/814/large/caption-bamboo-house-uv.jpg?1691123015",
+        "interior": "https://images.unsplash.com/photo-1523911272850-6b0e9fca8b5d?w=1600&q=80",
+        "floorPlan": "https://images.unsplash.com/photo-1542317854-6e9f0a5a5f29?w=1600&q=80",
+        "detail": "https://cdna.artstation.com/p/assets/images/images/065/751/820/large/caption-bamboo-houserendered.jpg?1691123023"
+      },
+      "specs": {
+        "status": "Not Completed",
+        "location": "Fushun, China",
+        "area": "320 m²",
+        "type": "Residential",
+        "style": "Contemporary",
+        "year": "2022"
+      },
+      "software": ["3Ds Max", "Vray Renderer", "Photoshop"],
+      "concept": "Merge indoor and outdoor living through large operable glazing and layered terraces.",
+      "createdAt": "2024-08-01"
+    },
+    {
+      "id": "a2",
+      "title": "Minimal Urban Loft",
+      "description": "An industrial loft conversion prioritizing material honesty and neutral palettes. Focused on spatial sequencing and natural light.",
+      "thumbnail": "https://images.unsplash.com/photo-1499951360447-b19be8fe80f5?w=1200&q=80",
+      "images": {
+        "exterior": "https://images.unsplash.com/photo-1505691723518-36a0b43f3b7c?w=1600&q=80",
+        "interior": "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=1600&q=80",
+        "floorPlan": "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?w=1600&q=80",
+        "detail": "https://images.unsplash.com/photo-1481277542470-605612bd2d61?w=1600&q=80"
+      },
+      "specs": {
+        "status": "In Development",
+        "location": "Berlin, Germany",
+        "area": "180 m²",
+        "type": "Residential",
+        "style": "Minimal",
+        "year": "2025"
+      },
+      "software": ["Blender", "Cycles", "Substance Painter"],
+      "concept": "Resurrect raw industrial elements with refined minimal interventions.",
+      "createdAt": "2025-01-10"
     }
   ],
   "plugins": [

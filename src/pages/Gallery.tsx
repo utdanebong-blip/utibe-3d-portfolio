@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Layout } from '@/components/layout';
-import { projects, showreel } from '@/hooks/usePortfolioData';
-import { Box, Play, Film } from 'lucide-react';
+import { projects, showreel, archvizProjects } from '@/hooks/usePortfolioData';
+import { Box, Play, Film, MapPin, Maximize } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEffect, useState, useRef } from 'react';
 
@@ -159,6 +159,9 @@ export default function Gallery() {
             <TabsTrigger value="projects" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Box size={16} /> Projects
             </TabsTrigger>
+            <TabsTrigger value="archviz" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Box size={16} /> Archviz
+            </TabsTrigger>
             <TabsTrigger value="showreel" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               <Film size={16} /> Showreel
             </TabsTrigger>
@@ -242,6 +245,48 @@ export default function Gallery() {
                   </div>
                 </Link>
               ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="archviz" className="animate-fade-in">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {archvizProjects.map(project => <Link key={project.id} to={`/archviz/${project.id}`} className="group relative overflow-hidden rounded-xl border border-border/50 bg-gradient-to-br from-card to-card/50 transition-all duration-500 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5">
+                  <div className="aspect-[16/10] overflow-hidden relative">
+                    <img src={project.thumbnail} alt={project.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent opacity-90" />
+                    
+                    {/* Status Badge */}
+                    <div className="absolute top-4 right-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${project.specs.status === 'Completed' ? 'bg-green-500/20 text-green-300 border border-green-500/30' : project.specs.status === 'In Development' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-primary/20 text-primary border border-primary/30'}`}>
+                        {project.specs.status}
+                      </span>
+                    </div>
+                    
+                    {/* Overlay Content */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                        <MapPin size={12} />
+                        <span>{project.specs.location}</span>
+                      </div>
+                      <h3 className="font-display text-2xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                        {project.title}
+                      </h3>
+                      <p className="font-body text-sm text-muted-foreground line-clamp-2 mb-4">
+                        {project.description}
+                      </p>
+                      <div className="flex items-center gap-4 text-xs">
+                        <span className="flex items-center gap-1.5 text-foreground/70">
+                          <Maximize size={12} />
+                          {project.specs.area}
+                        </span>
+                        <span className="text-foreground/50">•</span>
+                        <span className="text-foreground/70">{project.specs.type}</span>
+                        <span className="text-foreground/50">•</span>
+                        <span className="text-foreground/70">{project.specs.style}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>)}
             </div>
           </TabsContent>
 
