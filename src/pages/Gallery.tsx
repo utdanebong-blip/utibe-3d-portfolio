@@ -186,7 +186,7 @@ export default function Gallery() {
         <h1 className="font-display text-4xl md:text-5xl font-bold mb-4">
           Project <span className="text-primary">Gallery</span>
         </h1>
-        <p className="font-body text-muted-foreground mb-12">A collection of 3D props, game assets, and showreels</p>
+        <p className="font-body text-muted-foreground mb-12">A collection of 3D props, Archviz projects, and showreels</p>
 
           <Tabs value={tab} onValueChange={(v) => setTab(v)} className="w-full">
           <TabsList className="mb-8 bg-card border border-border">

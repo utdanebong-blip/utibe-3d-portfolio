@@ -187,7 +187,7 @@ export default function About() {
           </div>
 
           {/* Main Content */}
-          <div ref={mainRef as any} className={`lg:col-span-2 transition-all duration-1000 delay-500 ${mainInView ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
+          <div ref={mainRef as any} className={`lg:col-span-2 transition-all duration-500 delay-100 ${mainInView ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'}`}>
             <Tabs defaultValue="about" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-8 bg-card/50 backdrop-blur-sm border border-border/50 p-1 rounded-xl">
                 <TabsTrigger value="about" className="font-display rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all">About</TabsTrigger>

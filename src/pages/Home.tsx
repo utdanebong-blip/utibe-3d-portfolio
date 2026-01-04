@@ -13,24 +13,44 @@ function TypingQuote() {
     '“Lighting reveals the soul of a scene. I chase it until the moment feels alive.”',
     '“Good art balances purpose with restraint, detail is meaningful, not busywork.”',
     '“I make assets that play nice in engines and look breathtaking in stills.”',
+    '“From concept to crafted 3D reality.”',
   ];
 
   const [text, setText] = useState('');
   const [index, setIndex] = useState(0);
   const refEl = useRef<HTMLElement | null>(null);
   const [started, setStarted] = useState(false);
+  const [minHeight, setMinHeight] = useState<number | undefined>(undefined);
   const timeouts = useRef<number[]>([]);
 
   useEffect(() => {
     const el = refEl.current;
     if (!el) return;
+    // measure longest quote height to reserve space and avoid layout shift
+    const longest = quotes.reduce((a, b) => (a.length > b.length ? a : b), quotes[0]);
+    const measure = document.createElement('div');
+    measure.style.position = 'absolute';
+    measure.style.visibility = 'hidden';
+    measure.style.pointerEvents = 'none';
+    measure.style.width = `${el.clientWidth || Math.min(900, window.innerWidth - 64)}px`;
+    measure.className = 'font-display text-2xl md:text-4xl lg:text-5xl font-light leading-relaxed';
+    measure.innerText = longest;
+    document.body.appendChild(measure);
+    const h = measure.clientHeight;
+    setMinHeight(h);
+    document.body.removeChild(measure);
     const obs = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             setStarted(true);
             setIndex(0);
-            obs.disconnect();
+          } else {
+            // pause typing and clear text when out of view to avoid layout shifts
+            setStarted(false);
+            setText('');
+            timeouts.current.forEach((t) => clearTimeout(t));
+            timeouts.current = [];
           }
         });
       },
@@ -81,7 +101,11 @@ function TypingQuote() {
   }, []);
 
   return (
-    <blockquote ref={refEl as any} className="font-display text-2xl md:text-4xl lg:text-5xl font-light text-foreground leading-relaxed mb-8">
+    <blockquote
+      ref={refEl as any}
+      className="font-display text-1xl md:text-2xl lg:text-3xl font-light text-foreground leading-relaxed mb-8"
+      style={minHeight ? { minHeight: `${minHeight}px` } : undefined}
+    >
       {text}
       <span className="text-primary" aria-hidden="true">|</span>
     </blockquote>
@@ -130,10 +154,19 @@ function TypingName() {
   }, []);
 
   return (
-    <h1 className="font-display text-6xl md:text-8xl lg:text-9xl font-bold mb-8 tracking-tight animate-fade-in" style={{ animationDelay: '0.1s' }}>
-      <span className="text-foreground">{top}</span>
-      <br />
-      <span className="text-primary text-glow-green">{bottom}{cursor ? '|' : ' '}</span>
+    <h1 className="relative font-display text-6xl md:text-8xl lg:text-9xl font-bold mb-8 tracking-tight animate-fade-in" style={{ animationDelay: '0.1s' }}>
+      {/* reserve vertical space using an invisible full-text placeholder */}
+      <span className="invisible block text-foreground text-center whitespace-pre-line">
+        {first}
+        {"\n"}
+        {second}
+      </span>
+
+      {/* overlay the typing text so it doesn't affect layout */}
+      <span className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+        <span className="text-foreground">{top}</span>
+        <span className="text-primary text-glow-green">{bottom}{cursor ? '|' : ' '}</span>
+      </span>
     </h1>
   );
 }
@@ -148,7 +181,7 @@ function HeroText() {
       }`}
       style={{ transitionDelay: '180ms' }}
     >
-      Transforming imagination into tangible digital experiences through meticulous craftsmanship and artistic vision.
+      Crafting forms in <span className="inline-block text-2xl md:text-4xl lg:text-2xl font-semibold text-primary text-glow-green mx-2 align-middle">3 DIMENSION.</span> 
     </p>
   );
 }
