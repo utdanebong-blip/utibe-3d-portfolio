@@ -1,9 +1,20 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Layout } from '@/components/layout';
 import { projects, showreel, archvizProjects } from '@/hooks/usePortfolioData';
-import { Box, Play, Film, MapPin, Maximize, ArrowRight } from 'lucide-react';
+import { Box, Play, Film, MapPin, Maximize, ArrowRight, Sparkles } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEffect, useState, useRef } from 'react';
+import { 
+  Building2,
+  Eye,
+  Clock,
+  Layers,
+  Palette,
+  Triangle,
+  Grid3X3,
+  LayoutGrid
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export const hashLink = (path: string) => `#${path}`;
 
@@ -187,6 +198,29 @@ export default function Gallery() {
           <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
           <div className="absolute bottom-10 right-20 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
         </div>
+        {/* Animated Background */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background" />
+          <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
+          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-accent/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
+        {/* Grid overlay */}
+          <div className="absolute inset-0 opacity-[0.03]" style={{
+            backgroundImage: `linear-gradient(hsl(var(--primary)) 1px, transparent 1px),
+                             linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)`,
+            backgroundSize: '80px 80px'
+          }} />
+        </div>
+        {/* Floating Elements */}
+        <div className="absolute top-20 left-10 md:left-20 w-20 h-20 border border-primary/20 rounded-2xl rotate-12 animate-float opacity-30" />
+        <div className="absolute bottom-32 right-10 md:right-32 w-16 h-16 border border-accent/20 rounded-xl -rotate-12 animate-float opacity-30" style={{ animationDelay: '-2s' }} />
+        
+        <div className="container mx-auto px-4 relative z-10 text-center">
+          {/* Floating badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 backdrop-blur-xl border border-border/50 mb-6 animate-fade-in">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="font-mono text-xs text-muted-foreground uppercase tracking-widest">Portfolio</span>
+          </div>
+          </div>
         <div className="container mx-auto px-4 relative">
           <div className="text-center max-w-3xl mx-auto">
             <span className="inline-flex items-center gap-2 text-primary font-mono text-sm mb-4 bg-primary/10 px-4 py-2 rounded-full">
@@ -199,6 +233,10 @@ export default function Gallery() {
             <p className="font-body text-lg text-muted-foreground max-w-2xl mx-auto">
               A collection of 3D props, Archviz projects, and showreels
             </p>
+            {/* Scroll hint */}
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce">
+              <div className="w-px h-8 bg-gradient-to-b from-primary to-transparent" />
+            </div>
           </div>
         </div>
       </div>
@@ -393,43 +431,145 @@ export default function Gallery() {
           </TabsContent>
 
           <TabsContent value="showreel" className="animate-fade-in">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {showreelVideos.map((video) => (
-                <div
-                  key={video.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => video.videoUrl && window.open(video.videoUrl, '_blank', 'noopener')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      video.videoUrl && window.open(video.videoUrl, '_blank', 'noopener');
-                    }
-                  }}
-                  className="group rounded-lg overflow-hidden border border-border bg-card hover-glow cursor-pointer"
-                >
-                  <div className="aspect-video overflow-hidden relative">
-                    <img
-                      src={video.thumbnail}
-                      alt={video.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80" />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-16 h-16 rounded-full bg-primary/90 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-                        <Play size={28} className="text-primary-foreground ml-1" />
-                      </div>
-                    </div>
-                    <span className="absolute bottom-3 right-3 bg-background/80 text-foreground text-xs font-mono px-2 py-1 rounded">
-                      {video.duration}
-                    </span>
+            <div className="animate-fade-in">
+              {/* Section Header */}
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-8 p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-xl border border-border/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Film className="w-5 h-5 md:w-6 md:h-6 text-primary" />
                   </div>
-                  <div className="p-4">
-                    <h3 className="font-display text-lg font-semibold text-foreground mb-2">{video.title}</h3>
-                    <p className="font-body text-sm text-muted-foreground line-clamp-2">{video.description}</p>
+                  <div>
+                    <h2 className="font-display text-lg md:text-xl font-bold text-foreground">Showreels & Breakdowns</h2>
+                    <p className="text-xs md:text-sm text-muted-foreground">{showreelVideos.length} videos</p>
                   </div>
                 </div>
-              ))}
+              </div>
+
+              {/* Featured Video */}
+              <div className="mb-6 md:mb-10">
+                <div className="group relative rounded-2xl md:rounded-3xl overflow-hidden cursor-pointer">
+                  <div className="aspect-video md:aspect-[21/9]">
+                    <img 
+                      src={showreelVideos[0].thumbnail}
+                      alt={showreelVideos[0].title}
+                      className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                    />
+                  </div>
+                  
+                  {/* Overlays */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+                  <div className="absolute inset-0 bg-background/20 group-hover:bg-background/10 transition-colors duration-500" />
+                  
+                  {/* Play Button */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="relative">
+                      <div className="absolute inset-0 rounded-full bg-primary/30 animate-ping" style={{ animationDuration: '2s' }} />
+                      <div className="absolute -inset-4 md:-inset-6 rounded-full border border-primary/20 animate-pulse" style={{ animationDuration: '3s' }} />
+                      <div className="relative w-16 h-16 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-2xl shadow-primary/30 group-hover:scale-110 transition-transform duration-500">
+                        <Play className="w-7 h-7 md:w-10 md:h-10 text-primary-foreground ml-1 fill-current" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="absolute bottom-0 left-0 right-0 p-5 md:p-10">
+                    <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-3 md:mb-4">
+                      <span className="px-3 md:px-4 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground">
+                        Featured
+                      </span>
+                      <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono bg-background/60 backdrop-blur-xl border border-border/30">
+                        <Clock className="w-3 h-3" />
+                        {showreelVideos[0].duration}
+                      </span>
+                    </div>
+                    <h2 className="font-display text-xl md:text-3xl lg:text-4xl font-bold text-foreground mb-2">
+                      {showreelVideos[0].title}
+                    </h2>
+                    <p className="font-body text-sm md:text-base text-muted-foreground max-w-2xl">
+                      {showreelVideos[0].description}
+                    </p>
+                  </div>
+                  
+                  {/* Corner decorations */}
+                  <div className="absolute top-4 md:top-6 left-4 md:left-6 w-6 md:w-10 h-6 md:h-10 border-t-2 border-l-2 border-primary/40 rounded-tl-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  <div className="absolute top-4 md:top-6 right-4 md:right-6 w-6 md:w-10 h-6 md:h-10 border-t-2 border-r-2 border-primary/40 rounded-tr-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                </div>
+              </div>
+
+              {/* Video Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                {showreelVideos.slice(1).map((video, index) => (
+                  <div
+                    key={video.id}
+                    className="group relative rounded-2xl overflow-hidden bg-card/50 backdrop-blur-xl border border-border/30 hover:border-primary/30 transition-all duration-500 cursor-pointer animate-fade-in"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <div className="aspect-video overflow-hidden relative">
+                      <img 
+                        src={video.thumbnail}
+                        alt={video.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+                      <div className="absolute inset-0 bg-background/30 group-hover:bg-background/10 transition-colors duration-300" />
+                      
+                      {/* Play Button */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-primary/90 backdrop-blur-xl flex items-center justify-center shadow-lg opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-300">
+                          <Play className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground ml-0.5 fill-current" />
+                        </div>
+                      </div>
+                      
+                      {/* Duration & Category */}
+                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+                        <span className="px-2.5 py-1 rounded-full text-[10px] md:text-xs font-medium bg-card/80 backdrop-blur-xl border border-border/50">
+                          {video.category}
+                        </span>
+                        <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] md:text-xs font-mono bg-background/80 backdrop-blur-xl">
+                          <Clock className="w-3 h-3" />
+                          {video.duration}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 md:p-5">
+                      <h3 className="font-display text-base md:text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                        {video.title}
+                      </h3>
+                      <p className="font-body text-xs md:text-sm text-muted-foreground line-clamp-2">
+                        {video.description}
+                      </p>
+                      
+                      <div className="mt-4 pt-4 border-t border-border/20 flex items-center justify-between">
+                        <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">Watch Now</span>
+                        <ArrowRight className="w-4 h-4 text-primary opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-300" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* CTA */}
+              <div className="mt-10 md:mt-12 text-center">
+                <div className="inline-flex flex-col items-center p-6 md:p-8 rounded-2xl md:rounded-3xl bg-card/30 backdrop-blur-xl border border-border/30">
+                  <div className="w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
+                    <Film className="w-7 h-7 md:w-8 md:h-8 text-primary" />
+                  </div>
+                  <p className="text-sm md:text-base text-muted-foreground mb-4">More content on my video platforms</p>
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    <Button asChild variant="outline" className="rounded-full gap-2 border-primary/30 text-primary hover:bg-primary hover:text-primary-foreground">
+                      <a href="https://youtube.com" target="_blank" rel="noopener noreferrer">
+                        <Play className="w-4 h-4" /> YouTube
+                      </a>
+                    </Button>
+                    <Button asChild variant="outline" className="rounded-full gap-2 border-accent/30 text-accent hover:bg-accent hover:text-accent-foreground">
+                      <a href="https://vimeo.com" target="_blank" rel="noopener noreferrer">
+                        <Play className="w-4 h-4" /> Vimeo
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
@@ -509,7 +649,7 @@ export default function Gallery() {
 }
 
 function TypewriterGallery() {
-  const words = ['Projects', 'Props', 'Archviz', 'Showreels'];
+  const words = ['Props', 'Archviz', 'Showreels'];
   return <Typewriter words={words} loop={true} pause={1400} />;
 }
 

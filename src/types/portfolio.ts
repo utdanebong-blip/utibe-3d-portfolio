@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 export interface Project {
   id: string;
   title: string;
@@ -25,6 +27,11 @@ export interface Project {
   concept?: string;
   modelUrl?: string;
   specs: {
+    status: string;
+    year: number;
+    location: ReactNode;
+    area: number;
+    type: string;
     polyCount: number;
     vertexCount: number;
     texelDensity: string;

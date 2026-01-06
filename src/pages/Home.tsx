@@ -364,81 +364,155 @@ export default function Home() {
       </section>
 
 
-{/* Archviz Section */}
-      <section className="py-24 relative bg-gradient-to-b from-card/30 via-background to-background">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
-            <div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-accent/10 border border-accent/30">
-                  <Building2 className="w-5 h-5 text-accent" />
-                </div>
-                <span className="font-mono text-xs text-accent tracking-widest uppercase">Architecture</span>
-              </div>
-              <h2 className="font-display text-4xl md:text-5xl font-bold text-foreground">
-                Architectural <span className="text-accent text-glow-purple">Visualization</span>
-              </h2>
-              <p className="font-body text-muted-foreground mt-3 max-w-lg">
-                Photorealistic renders and immersive walkthroughs for residential and commercial projects.
-              </p>
+{/* Archviz Section - Redesigned */}
+      <section className="py-24 relative overflow-hidden">
+        {/* Elegant background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-accent/[0.02] to-background" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+        
+        <div className="container mx-auto px-4 relative">
+          {/* Header */}
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full border border-accent/20 bg-accent/5 backdrop-blur-sm mb-6">
+              <Building2 className="w-4 h-4 text-accent" />
+              <span className="font-mono text-xs text-accent tracking-widest uppercase">Architecture</span>
             </div>
-            <Link to="/gallery">
-              <Button variant="ghost" className="font-mono gap-2 text-muted-foreground hover:text-accent uppercase text-xs tracking-wider">
-                View All Archviz <ArrowRight size={14} />
-              </Button>
-            </Link>
+            <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-4">
+              Architectural <span className="text-accent text-glow-purple">Visualization</span>
+            </h2>
+            <p className="font-body text-muted-foreground max-w-2xl mx-auto">
+              Transforming architectural concepts into breathtaking photorealistic renders and immersive experiences
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {featuredArchviz.map((project, index) => (
-              <Link
-                key={project.id}
-                to={`/archviz/${project.id}`}
-                className="group relative rounded-2xl overflow-hidden border border-border/30 hover:border-accent/30 transition-all duration-700 animate-fade-in"
-                style={{ animationDelay: `${index * 0.15}s` }}
-              >
-                <div className="aspect-[16/9] overflow-hidden relative">
-                  <img
-                    src={project.thumbnail}
-                    alt={project.title}
-                    className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
+          {/* Featured Project - Large */}
+          {featuredArchviz[0] && (
+            <Link 
+              to={`/archviz/${featuredArchviz[0].id}`}
+              className="group block mb-8 relative"
+            >
+              <div className="relative rounded-3xl overflow-hidden">
+                <div className="aspect-[21/9] md:aspect-[21/8]">
+                  <img 
+                    src={featuredArchviz[0].thumbnail}
+                    alt={featuredArchviz[0].title}
+                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-background/50 to-transparent" />
-                  
-                  {/* Status badge */}
-                  <div className="absolute top-6 right-6">
-                    <span className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm ${
-                      (project.specs as any).status === 'Completed' 
-                        ? 'bg-green-500/20 text-green-300 border border-green-500/30' 
-                        : (project.specs as any).status === 'In Development'
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                        : 'bg-accent/20 text-accent border border-accent/30'
+                </div>
+                
+                {/* Multi-layer gradient */}
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-transparent" />
+                
+                {/* Floating accent glow */}
+                <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-accent/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                
+                {/* Content */}
+                <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-md ${
+                      featuredArchviz[0].specs.status === 'Completed' 
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                        : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                     }`}>
-                      {(project.specs as any).status}
+                      {featuredArchviz[0].specs.status}
                     </span>
+                    <span className="px-3 py-1.5 rounded-full text-xs font-mono text-muted-foreground backdrop-blur-md bg-background/30 border border-border/30">
+                      {featuredArchviz[0].specs.year}
+                    </span>
+                  </div>
+                  
+                  <h3 className="font-display text-3xl md:text-5xl font-bold text-foreground mb-3 group-hover:text-accent transition-colors duration-500">
+                    {featuredArchviz[0].title}
+                  </h3>
+                  
+                  <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-4">
+                    <span className="flex items-center gap-2">
+                      <MapPin size={14} className="text-accent" />
+                      {featuredArchviz[0].specs.location}
+                    </span>
+                    <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                    <span className="flex items-center gap-2">
+                      <Layers size={14} className="text-accent" />
+                      {featuredArchviz[0].specs.area}
+                    </span>
+                    <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                    <span>{featuredArchviz[0].specs.type}</span>
+                  </div>
+                  
+                  <p className="font-body text-muted-foreground max-w-xl line-clamp-2 mb-6 hidden md:block">
+                    {featuredArchviz[0].description}
+                  </p>
+                  
+                  <div className="inline-flex items-center gap-2 text-accent font-medium opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">
+                    Explore Project <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>
                 
-                <div className="absolute bottom-0 left-0 right-0 p-8">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
+                {/* Decorative corner elements */}
+                <div className="absolute top-6 left-6 w-12 h-12 border-t-2 border-l-2 border-accent/30 rounded-tl-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute top-6 right-6 w-12 h-12 border-t-2 border-r-2 border-accent/30 rounded-tr-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              </div>
+            </Link>
+          )}
+
+          {/* Secondary Projects Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {featuredArchviz.slice(1, 3).map((project, index) => (
+              <Link
+                key={project.id}
+                to={`/archviz/${project.id}`}
+                className="group relative rounded-2xl overflow-hidden border border-border/30 hover:border-accent/30 transition-all duration-500 animate-fade-in"
+                style={{ animationDelay: `${index * 0.15}s` }}
+              >
+                <div className="aspect-[16/10] overflow-hidden relative">
+                  <img
+                    src={project.thumbnail}
+                    alt={project.title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+                  
+                  {/* Accent glow on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                </div>
+                
+                {/* Status */}
+                <div className="absolute top-4 left-4">
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium backdrop-blur-md ${
+                    project.specs.status === 'Completed' 
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                      : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                  }`}>
+                    {project.specs.status}
+                  </span>
+                </div>
+                
+                {/* Content */}
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
                     <MapPin size={12} className="text-accent" />
-                    <span>{(project.specs as any).location}</span>
+                    <span>{project.specs.location}</span>
                     <span className="text-border">•</span>
-                    <span>{(project.specs as any).area}</span>
+                    <span>{project.specs.area}</span>
                   </div>
-                  <h3 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2 group-hover:text-accent transition-colors">
+                  <h3 className="font-display text-xl md:text-2xl font-bold text-foreground group-hover:text-accent transition-colors duration-300">
                     {project.title}
                   </h3>
-                  <p className="font-body text-sm text-muted-foreground line-clamp-2 max-w-lg">
-                    {project.description}
-                  </p>
-                  <div className="flex items-center gap-2 mt-4 text-accent font-body text-sm opacity-0 group-hover:opacity-100 transition-opacity">
-                    View Project <ChevronRight size={14} />
-                  </div>
                 </div>
               </Link>
             ))}
+          </div>
+
+          {/* View All CTA */}
+          <div className="text-center mt-12">
+            <Link to="/gallery">
+              <Button variant="outline" size="lg" className="font-display gap-3 border-accent/30 text-accent hover:bg-accent/10 hover:border-accent/50 group">
+                Explore All Projects
+                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
