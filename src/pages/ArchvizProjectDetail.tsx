@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { Layout } from '@/components/layout';
 import { useArchvizProjects } from '@/hooks/usePortfolioData';
@@ -15,12 +15,25 @@ export default function ArchvizProjectDetail() {
   const project = getProject(id || '');
   const [viewMode, setViewMode] = useState<ViewMode>('exterior');
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const goBack = () => {
+    // if there is a prior entry in history (we passed `state.from`), go back
+    if ((location.state as any)?.from) {
+      navigate(-1);
+      return;
+    }
+    // otherwise replace to gallery archviz tab
+    navigate('/gallery?tab=archviz', { replace: true });
+  };
+
   if (!project) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-20 text-center">
           <h1 className="font-display text-2xl mb-4">Project not found</h1>
-          <Link to="/gallery?tab=archviz"><Button>Back to Gallery</Button></Link>
+          <button onClick={() => navigate('/gallery?tab=archviz', { replace: true })}><Button>Back to Gallery</Button></button>
         </div>
       </Layout>
     );
@@ -74,12 +87,12 @@ export default function ArchvizProjectDetail() {
         </button>
         
         {/* Back Button */}
-        <Link 
-          to="/gallery?tab=archviz" 
+        <button
+          onClick={goBack}
           className="absolute top-4 left-4 md:top-8 md:left-8 inline-flex items-center gap-2 text-sm text-foreground/80 hover:text-primary transition-colors backdrop-blur-sm bg-background/20 px-3 py-2 md:px-4 md:py-2 rounded-full border border-border/30"
         >
           <ArrowLeft size={14} /> <span className="hidden sm:inline">Gallery</span>
-        </Link>
+        </button>
         
         {/* Status Badge */}
         <div className="absolute top-4 right-4 md:top-8 md:right-8">

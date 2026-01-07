@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useState } from 'react';
 import { Layout } from '@/components/layout';
 import { getProject } from '@/hooks/usePortfolioData';
@@ -15,13 +15,23 @@ export default function ProjectDetail() {
   const { id } = useParams();
   const project = getProject(id || '');
   const [viewMode, setViewMode] = useState<ViewMode>('rendered');
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const goBack = () => {
+    if ((location.state as any)?.from) {
+      navigate(-1);
+      return;
+    }
+    navigate('/gallery?tab=props', { replace: true });
+  };
 
   if (!project) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-20 text-center">
           <h1 className="font-display text-2xl mb-4">Project not found</h1>
-          <Link to="/gallery"><Button>Back to Gallery</Button></Link>
+          <button onClick={() => navigate('/gallery?tab=props', { replace: true })}><Button>Back to Gallery</Button></button>
         </div>
       </Layout>
     );
@@ -49,12 +59,12 @@ export default function ProjectDetail() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
         
         {/* Back Button */}
-        <Link 
-          to="/gallery" 
+        <button
+          onClick={goBack}
           className="absolute top-4 left-4 md:top-8 md:left-8 z-20 inline-flex items-center gap-2 text-sm text-foreground/70 hover:text-primary transition-colors backdrop-blur-sm bg-background/30 px-3 py-2 md:px-4 md:py-2 rounded-full border border-border/30"
         >
           <ArrowLeft size={14} /> <span className="hidden sm:inline">Gallery</span>
-        </Link>
+        </button>
 
         {/* Category Badge */}
         <div className="absolute top-4 right-4 md:top-8 md:right-8 z-20">

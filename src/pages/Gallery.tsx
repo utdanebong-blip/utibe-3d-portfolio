@@ -1,11 +1,16 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout';
-import { projects, showreel, archvizProjects } from '@/hooks/usePortfolioData';
-import { Box, Play, Film, MapPin, Maximize, ArrowRight, Sparkles } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useEffect, useState, useRef } from 'react';
+import { projects as projectsData, archvizProjects as archvizProjectsData, showreel as demoShowreel } from '@/hooks/usePortfolioData';
 import { 
+  Box, 
+  Play, 
+  Film, 
+  MapPin, 
+  Maximize, 
+  ArrowRight, 
   Building2,
+  Sparkles,
   Eye,
   Clock,
   Layers,
@@ -16,200 +21,56 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-export const hashLink = (path: string) => `#${path}`;
+const showreelVideos = demoShowreel;
 
-
-const defaultShowreel = [
-  {
-    id: '1',
-    title: 'Character Animation Reel 2024',
-    thumbnail: 'https://images.unsplash.com/photo-1536240478700-b869070f9279?w=800&auto=format&fit=crop&q=60',
-    duration: '2:45',
-    description: 'A compilation of character animations and rigging work',
-  },
-  {
-    id: '2',
-    title: 'Environment Showcase',
-    thumbnail: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&auto=format&fit=crop&q=60',
-    duration: '3:12',
-    description: 'Cinematic environment breakdowns and lighting studies',
-  },
-  {
-    id: '3',
-    title: 'Prop Modeling Breakdown',
-    thumbnail: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&auto=format&fit=crop&q=60',
-    duration: '4:30',
-    description: 'Step-by-step breakdown of prop creation workflow',
-  },
-];
-
-const showreelVideos = (showreel && showreel.length > 0)
-  ? (showreel as any[]).map((s) => ({
-      id: s.id || s.title || Math.random().toString(36).slice(2, 9),
-      title: s.title || 'Showreel',
-      thumbnail: s.poster || '',
-      duration: s.duration || '',
-      description: s.description || '',
-      videoUrl: s.videoUrl || '',
-    }))
-  : defaultShowreel;
+type TabType = 'props' | 'archviz' | 'showreel';
 
 export default function Gallery() {
+  const [activeTab, setActiveTab] = useState<TabType>('props');
+  const projects = projectsData;
+  const archvizProjects = archvizProjectsData;
+
+  // If a `tab` query param is present (e.g. ?tab=archviz), open that tab.
   const location = useLocation();
-  const [tab, setTab] = useState(() => {
-    // prefer query param `tab`, fall back to hash
-    try {
-      const params = new URLSearchParams(location.search);
-      return params.get('tab') || (location.hash ? location.hash.replace('#', '') : 'projects');
-    } catch (e) {
-      return location.hash ? location.hash.replace('#', '') : 'projects';
-    }
-  });
-
+  const navigate = useNavigate();
   useEffect(() => {
-    // update tab when location changes (search or hash)
-    try {
-      const params = new URLSearchParams(location.search);
-      const t = params.get('tab') || (location.hash ? location.hash.replace('#', '') : 'projects');
-      if (t && t !== tab) setTab(t);
-    } catch (e) {
-      const h = location.hash ? location.hash.replace('#', '') : '';
-      if (h && h !== tab) setTab(h);
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab') as TabType | null;
+    if (tab === 'props' || tab === 'archviz' || tab === 'showreel') {
+      setActiveTab(tab);
     }
-  }, [location.search, location.hash]);
+  }, [location.search]);
 
-  // keep URL in sync when tab changes (use hash-router friendly query param)
-  useEffect(() => {
-    if (!tab) return;
-    try {
-      const base = window.location.pathname || '/';
-      const newHash = `#/gallery?tab=${encodeURIComponent(tab)}`;
-      window.history.replaceState(null, '', newHash);
-    } catch (e) {
-      window.location.hash = `gallery?tab=${tab}`;
-    }
-  }, [tab]);
-  // `projects` is imported directly from demo data (read-only)
-  const [viewer, setViewer] = useState<{ url: string; title?: string } | null>(null);
+  const tabs = [
+    { id: 'props' as TabType, label: 'Props', icon: Box, count: projects.length },
+    { id: 'archviz' as TabType, label: 'Archviz', icon: Building2, count: archvizProjects.length },
+    { id: 'showreel' as TabType, label: 'Showreel', icon: Film, count: showreelVideos.length }
+  ];
 
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setViewer(null);
-    }
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, []);
+  // removed typing animation to avoid stray text rendering
 
-  // Viewer transform state
-  const imgRef = useRef<HTMLImageElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [scale, setScale] = useState(1);
-  const [translate, setTranslate] = useState({ x: 0, y: 0 });
-  const [isPanning, setIsPanning] = useState(false);
-  const lastPan = useRef<{ x: number; y: number } | null>(null);
-  const lastTouchDist = useRef<number | null>(null);
-
-  useEffect(() => {
-    // reset transforms when opening a new viewer
-    setScale(1);
-    setTranslate({ x: 0, y: 0 });
-    lastPan.current = null;
-    lastTouchDist.current = null;
-  }, [viewer]);
-
-  function clamp(v: number, a = 0.5, b = 4) {
-    return Math.max(a, Math.min(b, v));
-  }
-
-  const onWheel = (e: any) => {
-    e.preventDefault();
-    const delta = -e.deltaY;
-    const factor = delta > 0 ? 1.1 : 1 / 1.1;
-    setScale((s) => clamp(s * factor));
-  };
-
-  const onDoubleClick = () => {
-    setScale((s) => (s > 1 ? 1 : 2));
-    setTranslate({ x: 0, y: 0 });
-  };
-
-  const onMouseDown = (e: any) => {
-    e.preventDefault();
-    setIsPanning(true);
-    lastPan.current = { x: e.clientX, y: e.clientY };
-  };
-
-  const onMouseMove = (e: any) => {
-    if (!isPanning || !lastPan.current) return;
-    const dx = e.clientX - lastPan.current.x;
-    const dy = e.clientY - lastPan.current.y;
-    lastPan.current = { x: e.clientX, y: e.clientY };
-    setTranslate((t) => ({ x: t.x + dx, y: t.y + dy }));
-  };
-
-  const onMouseUp = () => {
-    setIsPanning(false);
-    lastPan.current = null;
-  };
-
-  const onTouchStart = (e: any) => {
-    if (e.touches.length === 2) {
-      const [a, b] = [e.touches[0], e.touches[1]];
-      const dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-      lastTouchDist.current = dist;
-    } else if (e.touches.length === 1) {
-      const t = e.touches[0];
-      lastPan.current = { x: t.clientX, y: t.clientY };
-    }
-  };
-
-  const onTouchMove = (e: any) => {
-    if (e.touches.length === 2 && lastTouchDist.current) {
-      const [a, b] = [e.touches[0], e.touches[1]];
-      const dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
-      const factor = dist / lastTouchDist.current;
-      setScale((s) => clamp(s * factor));
-      lastTouchDist.current = dist;
-    } else if (e.touches.length === 1 && lastPan.current) {
-      const t = e.touches[0];
-      const dx = t.clientX - lastPan.current.x;
-      const dy = t.clientY - lastPan.current.y;
-      lastPan.current = { x: t.clientX, y: t.clientY };
-      setTranslate((t0) => ({ x: t0.x + dx, y: t0.y + dy }));
-    }
-  };
-
-  const onTouchEnd = (e: any) => {
-    if (e.touches.length < 2) lastTouchDist.current = null;
-    if (e.touches.length === 0) lastPan.current = null;
-  };
-
-  const zoomIn = () => setScale((s) => clamp(s * 1.25));
-  const zoomOut = () => setScale((s) => clamp(s / 1.25));
-  const fit = () => {
-    setScale(1);
-    setTranslate({ x: 0, y: 0 });
-  };
+  // Featured showreel helpers
+  const featured = showreelVideos[0] ?? null;
+  const featuredPoster = featured?.poster ?? featured?.thumbnail ?? '';
 
   return (
     <Layout>
-      <div className="relative overflow-hidden py-20 bg-gradient-to-b from-primary/5 via-background to-background">
-        <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-10 right-20 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
-        </div>
+      {/* Hero Section - Futuristic */}
+      <section className="relative min-h-[50vh] md:min-h-[60vh] flex items-center justify-center overflow-hidden">
         {/* Animated Background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background" />
           <div className="absolute top-1/3 left-1/4 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] animate-pulse" />
           <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-accent/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
-        {/* Grid overlay */}
+          
+          {/* Grid overlay */}
           <div className="absolute inset-0 opacity-[0.03]" style={{
             backgroundImage: `linear-gradient(hsl(var(--primary)) 1px, transparent 1px),
                              linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)`,
             backgroundSize: '80px 80px'
           }} />
         </div>
+
         {/* Floating Elements */}
         <div className="absolute top-20 left-10 md:left-20 w-20 h-20 border border-primary/20 rounded-2xl rotate-12 animate-float opacity-30" />
         <div className="absolute bottom-32 right-10 md:right-32 w-16 h-16 border border-accent/20 rounded-xl -rotate-12 animate-float opacity-30" style={{ animationDelay: '-2s' }} />
@@ -220,217 +81,330 @@ export default function Gallery() {
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="font-mono text-xs text-muted-foreground uppercase tracking-widest">Portfolio</span>
           </div>
-          </div>
-        <div className="container mx-auto px-4 relative">
-          <div className="text-center max-w-3xl mx-auto">
-            <span className="inline-flex items-center gap-2 text-primary font-mono text-sm mb-4 bg-primary/10 px-4 py-2 rounded-full">
-              <Box size={16} /> All Projects
-            </span>
-            <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              <TypewriterGallery />
-              <span className="block text-primary">Gallery</span>
-            </h1>
-            <p className="font-body text-lg text-muted-foreground max-w-2xl mx-auto">
-              A collection of 3D props, Archviz projects, and showreels
-            </p>
-            {/* Scroll hint */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce">
-              <div className="w-px h-8 bg-gradient-to-b from-primary to-transparent" />
-            </div>
+          
+          <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold mb-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <span className="text-foreground">Project</span>
+            <br className="md:hidden" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary to-accent"> Gallery</span>
+            {/* typing title removed */}
+          </h1>
+          
+          <p className="font-body text-base md:text-lg text-muted-foreground max-w-2xl mx-auto mb-8 animate-fade-in px-4" style={{ animationDelay: '0.2s' }}>
+            Explore my collection of 3D props, architectural visualizations, and showreels
+          </p>
+
+          {/* Futuristic Tab Switcher */}
+          <div className="flex flex-wrap justify-center gap-2 md:gap-3 animate-fade-in px-2" style={{ animationDelay: '0.3s' }}>
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  navigate(`?tab=${tab.id}`, { replace: false });
+                }}
+                className={`group relative flex items-center gap-2 md:gap-3 px-4 md:px-6 py-3 md:py-4 rounded-2xl font-medium text-sm md:text-base transition-all duration-500 ${
+                  activeTab === tab.id
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                    : 'bg-card/50 backdrop-blur-xl border border-border/50 text-muted-foreground hover:text-foreground hover:border-primary/30'
+                }`}
+              >
+                <tab.icon className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="font-display">{tab.label}</span>
+                <span className={`hidden md:flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full text-xs font-mono ${
+                  activeTab === tab.id
+                    ? 'bg-primary-foreground/20 text-primary-foreground'
+                    : 'bg-muted text-muted-foreground'
+                }`}>
+                  {tab.count}
+                </span>
+                
+                {/* Active indicator */}
+                {activeTab === tab.id && (
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary-foreground/50 rounded-full" />
+                )}
+              </button>
+            ))}
           </div>
         </div>
-      </div>
 
-      <div className="container mx-auto px-4 pb-20">
-          <Tabs value={tab} onValueChange={(v) => setTab(v)} className="w-full">
-          <TabsList className="mb-8 bg-card border border-border">
-            <TabsTrigger value="projects" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Box size={16} /> Projects
-            </TabsTrigger>
-            <TabsTrigger value="archviz" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Box size={16} /> Archviz
-            </TabsTrigger>
-            <TabsTrigger value="showreel" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Film size={16} /> Showreel
-            </TabsTrigger>
-          </TabsList>
+        {/* Scroll hint */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-50 animate-bounce">
+          <div className="w-px h-8 bg-gradient-to-b from-primary to-transparent" />
+        </div>
+      </section>
 
-          <TabsContent value="projects" className="animate-fade-in">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {projects.map((project) => (
-                <Link
-                  key={project.id}
-                  to={`/gallery/${project.id}`}
-                  className="group relative rounded-lg overflow-hidden bg-card border border-border/50 hover:border-primary/50 transition-all duration-500"
-                >
-                  {/* Top HUD bar */}
-                  <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-2.5 bg-gradient-to-b from-background/95 to-transparent">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                      <span className="font-mono text-[10px] text-primary uppercase tracking-wider">{project.category}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 bg-card/50 backdrop-blur-sm rounded px-2 py-0.5">
-                      <div className="w-1.5 h-1.5 bg-green-400 rounded-full" />
-                      <span className="font-mono text-[10px] text-green-400">GAME READY</span>
-                    </div>
+      {/* Content Section */}
+      <section className="pb-24 relative">
+        <div className="container mx-auto px-4">
+          
+          {/* Props Tab */}
+          {activeTab === 'props' && (
+            <div className="animate-fade-in">
+              {/* Section Stats */}
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-8 p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-xl border border-border/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Box className="w-5 h-5 md:w-6 md:h-6 text-primary" />
                   </div>
-                  
-                  <div className="aspect-[4/3] overflow-hidden relative">
-                    <img
-                      src={project.thumbnail}
-                      alt={project.title}
-                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-                    
-                    {/* Scan line effect */}
-                    <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/5 to-transparent animate-pulse" />
-                    </div>
-                    
-                    {/* Corner brackets */}
-                    <div className="absolute top-3 left-3 w-6 h-6 border-t-2 border-l-2 border-primary/50 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-primary/50 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-primary/50 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <div className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-primary/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div>
+                    <h2 className="font-display text-lg md:text-xl font-bold text-foreground">Game-Ready Props</h2>
+                    <p className="text-xs md:text-sm text-muted-foreground">{projects.length} assets available</p>
                   </div>
-                  
-                  {/* Bottom info panel - Game UI style */}
-                  <div className="p-4 bg-card border-t border-border/50">
-                    <h3 className="font-display text-lg font-bold text-foreground mb-3 group-hover:text-primary transition-colors">
-                      {project.title}
-                    </h3>
-                    <p className="font-body text-xs text-muted-foreground line-clamp-2 mb-4">{project.description}</p>
-                    
-                    {/* Stats grid */}
-                    <div className="grid grid-cols-4 gap-2 font-mono text-[10px]">
-                      <div className="bg-secondary/50 border border-border/30 rounded px-2 py-2 text-center">
-                        <span className="text-muted-foreground block mb-0.5">POLYS</span>
-                        <span className="text-primary font-bold text-sm">{(project.specs.polyCount / 1000).toFixed(1)}K</span>
-                      </div>
-                      <div className="bg-secondary/50 border border-border/30 rounded px-2 py-2 text-center">
-                        <span className="text-muted-foreground block mb-0.5">VERTS</span>
-                        <span className="text-primary font-bold text-sm">{(project.specs.vertexCount / 1000).toFixed(1)}K</span>
-                      </div>
-                      <div className="bg-secondary/50 border border-border/30 rounded px-2 py-2 text-center">
-                        <span className="text-muted-foreground block mb-0.5">TEX</span>
-                        <span className="text-primary font-bold text-sm">{project.specs.textureResolution}</span>
-                      </div>
-                      <div className="bg-secondary/50 border border-border/30 rounded px-2 py-2 text-center">
-                        <span className="text-muted-foreground block mb-0.5">MATS</span>
-                        <span className="text-primary font-bold text-sm">{project.specs.materialSlots}</span>
-                      </div>
-                    </div>
-                    
-                    {/* Software tags */}
-                    <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-border/30">
-                      {project.software.slice(0, 3).map((sw) => (
-                        <span key={sw} className="text-[9px] font-mono text-muted-foreground bg-background/50 px-2 py-0.5 rounded">
-                          {sw}
+                </div>
+                <div className="flex items-center gap-2">
+                  <button className="p-2 rounded-lg bg-primary/10 text-primary">
+                    <Grid3X3 className="w-4 h-4" />
+                  </button>
+                  <button className="p-2 rounded-lg bg-muted text-muted-foreground">
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Props Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                {projects.map((project, index) => (
+                  <Link
+                    key={project.id}
+                    to={`/gallery/${project.id}`}
+                    state={{ from: `/gallery?tab=${activeTab}` }}
+                    className="group relative rounded-2xl md:rounded-3xl overflow-hidden bg-card/50 backdrop-blur-xl border border-border/30 hover:border-primary/50 transition-all duration-500 animate-fade-in"
+                    style={{ animationDelay: `${index * 0.05}s` }}
+                  >
+                    {/* Image Container */}
+                    <div className="aspect-square overflow-hidden relative">
+                      <img 
+                        src={project.thumbnail} 
+                        alt={project.title} 
+                        className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110" 
+                      />
+                      
+                      {/* Gradient overlays */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80" />
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      
+                      {/* Top HUD */}
+                      <div className="absolute top-3 md:top-4 left-3 md:left-4 right-3 md:right-4 flex items-center justify-between">
+                        <span className="px-2 md:px-3 py-1 md:py-1.5 rounded-full text-[10px] md:text-xs font-mono bg-card/80 backdrop-blur-xl border border-border/50 text-primary uppercase tracking-wider">
+                          {project.category}
                         </span>
-                      ))}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </TabsContent>
+                        <div className="flex items-center gap-1.5 px-2 md:px-3 py-1 md:py-1.5 rounded-full bg-emerald-500/20 backdrop-blur-xl border border-emerald-500/30">
+                          <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                          <span className="text-[10px] md:text-xs font-mono text-emerald-400">READY</span>
+                        </div>
+                      </div>
 
-          <TabsContent value="archviz" className="animate-fade-in">
-            {/* Elegant masonry-style grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {archvizProjects.map((project, index) => (
-                <Link 
-                  key={project.id} 
-                  to={`/archviz/${project.id}`} 
-                  className={`group relative overflow-hidden rounded-2xl bg-card transition-all duration-700 hover:shadow-2xl hover:shadow-accent/10 animate-fade-in ${
-                    index === 0 ? 'md:col-span-2 md:row-span-2' : ''
-                  }`}
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  <div className={`overflow-hidden relative ${index === 0 ? 'aspect-[16/12]' : 'aspect-[4/3]'}`}>
-                    <img 
-                      src={project.thumbnail} 
-                      alt={project.title} 
-                      className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-110" 
-                    />
-                    
-                    {/* Elegant gradient overlays */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-90" />
-                    <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                    
-                    {/* Subtle border glow on hover */}
-                    <div className="absolute inset-0 border border-accent/0 group-hover:border-accent/20 rounded-2xl transition-all duration-500" />
-                  </div>
-                  
-                  {/* Status Badge - Refined */}
-                  <div className="absolute top-5 left-5">
-                    <span className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-md transition-all duration-300 ${
-                      (project.specs as any).status === 'Completed' 
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                        : (project.specs as any).status === 'In Development'
-                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                        : 'bg-accent/10 text-accent border border-accent/20'
-                    }`}>
-                      {(project.specs as any).status}
-                    </span>
-                  </div>
-                  
-                  {/* Year Badge */}
-                  <div className="absolute top-5 right-5 opacity-0 group-hover:opacity-100 transition-all duration-500">
-                      <span className="px-3 py-1.5 rounded-full text-xs font-mono text-foreground/70 backdrop-blur-md bg-background/30 border border-border/20">
-                      {(project.specs as any).year}
-                    </span>
-                  </div>
-                  
-                  {/* Content Overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
-                    {/* Location with icon */}
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground/80 mb-3">
-                      <MapPin size={12} className="text-accent" />
-                      <span className="font-light tracking-wide">{(project.specs as any).location}</span>
+                      {/* View Button - Mobile touch friendly */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-primary/90 backdrop-blur-xl flex items-center justify-center shadow-2xl shadow-primary/30 scale-75 group-hover:scale-100 transition-transform duration-300">
+                          <Eye className="w-6 h-6 md:w-7 md:h-7 text-primary-foreground" />
+                        </div>
+                      </div>
+                      
+                      {/* Corner accents */}
+                      <div className="absolute top-3 left-3 w-4 h-4 md:w-6 md:h-6 border-t-2 border-l-2 border-primary/40 rounded-tl-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      <div className="absolute top-3 right-3 w-4 h-4 md:w-6 md:h-6 border-t-2 border-r-2 border-primary/40 rounded-tr-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     </div>
                     
-                    {/* Title */}
-                    <h3 className={`font-display font-bold text-foreground mb-2 group-hover:text-accent transition-colors duration-500 ${
-                      index === 0 ? 'text-3xl' : 'text-xl'
-                    }`}>
-                      {project.title}
-                    </h3>
-                    
-                    {/* Description - only on larger cards */}
-                    {index === 0 && (
-                      <p className="font-body text-sm text-muted-foreground line-clamp-2 mb-4 opacity-80">
+                    {/* Content */}
+                    <div className="p-4 md:p-5">
+                      <h3 className="font-display text-base md:text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-1">
+                        {project.title}
+                      </h3>
+                      <p className="font-body text-xs md:text-sm text-muted-foreground line-clamp-2 mb-4">
                         {project.description}
                       </p>
-                    )}
-                    
-                    {/* Specs row */}
-                    <div className="flex items-center gap-4 text-xs font-light">
-                      <span className="text-foreground/60 flex items-center gap-1.5">
-                        <Maximize size={11} className="text-accent/70" />
-                        {(project.specs as any).area}
-                      </span>
-                      <span className="w-1 h-1 rounded-full bg-border" />
-                      <span className="text-foreground/60">{(project.specs as any).type}</span>
-                      <span className="w-1 h-1 rounded-full bg-border" />
-                      <span className="text-foreground/60">{(project.specs as any).style}</span>
+                      
+                      {/* Stats - Responsive Grid */}
+                      <div className="grid grid-cols-4 gap-1.5 md:gap-2">
+                        <div className="bg-secondary/30 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-2.5 text-center border border-border/20">
+                          <Triangle className="w-3 h-3 md:w-3.5 md:h-3.5 text-primary mx-auto mb-1" />
+                          <span className="text-[10px] md:text-xs font-mono text-primary font-bold block">
+                            {(project.specs.polyCount / 1000).toFixed(0)}K
+                          </span>
+                        </div>
+                        <div className="bg-secondary/30 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-2.5 text-center border border-border/20">
+                          <Layers className="w-3 h-3 md:w-3.5 md:h-3.5 text-primary mx-auto mb-1" />
+                          <span className="text-[10px] md:text-xs font-mono text-primary font-bold block">
+                            {project.specs.materialSlots}
+                          </span>
+                        </div>
+                        <div className="bg-secondary/30 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-2.5 text-center border border-border/20">
+                          <Palette className="w-3 h-3 md:w-3.5 md:h-3.5 text-primary mx-auto mb-1" />
+                          <span className="text-[10px] md:text-xs font-mono text-primary font-bold block">
+                            {project.specs.textureResolution}
+                          </span>
+                        </div>
+                        <div className="bg-secondary/30 backdrop-blur-sm rounded-lg md:rounded-xl p-2 md:p-2.5 text-center border border-border/20">
+                          <Grid3X3 className="w-3 h-3 md:w-3.5 md:h-3.5 text-primary mx-auto mb-1" />
+                          <span className="text-[10px] md:text-xs font-mono text-primary font-bold block">
+                            {(project.specs.vertexCount / 1000).toFixed(0)}K
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* Software Tags */}
+                      <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-border/20">
+                        {project.software.slice(0, 3).map((sw) => (
+                          <span 
+                            key={sw} 
+                            className="text-[9px] md:text-[10px] font-mono text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md"
+                          >
+                            {sw}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Archviz Tab */}
+          {activeTab === 'archviz' && (
+            <div className="animate-fade-in">
+              {/* Section Header */}
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-8 p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-xl border border-border/30">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                    <Building2 className="w-5 h-5 md:w-6 md:h-6 text-accent" />
+                  </div>
+                  <div>
+                    <h2 className="font-display text-lg md:text-xl font-bold text-foreground">Architectural Visualization</h2>
+                    <p className="text-xs md:text-sm text-muted-foreground">{archvizProjects.length} projects</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Featured Project */}
+              {archvizProjects[0] && (
+                <Link 
+                  to={`/archviz/${archvizProjects[0].id}`}
+                  state={{ from: `/gallery?tab=${activeTab}` }}
+                  className="group block mb-6 md:mb-8"
+                >
+                  <div className="relative rounded-2xl md:rounded-3xl overflow-hidden">
+                    <div className="aspect-[16/10] md:aspect-[21/9]">
+                      <img 
+                        src={archvizProjects[0].thumbnail}
+                        alt={archvizProjects[0].title}
+                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                      />
                     </div>
                     
-                    {/* View button - appears on hover */}
-                    <div className="mt-4 opacity-0 group-hover:opacity-100 transition-all duration-500 transform translate-y-2 group-hover:translate-y-0">
-                      <span className="inline-flex items-center gap-2 text-sm text-accent font-medium">
-                        View Project
-                        <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
-                      </span>
+                    {/* Overlays */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-transparent" />
+                    
+                    {/* Accent glow */}
+                    <div className="absolute -bottom-20 -left-20 w-60 h-60 md:w-80 md:h-80 bg-accent/20 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                    
+                    {/* Content */}
+                    <div className="absolute bottom-0 left-0 right-0 p-5 md:p-10">
+                      <div className="flex flex-wrap items-center gap-2 md:gap-3 mb-3 md:mb-4">
+                        <span className={`px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-xl ${
+                          archvizProjects[0].specs.status === 'Completed'
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        }`}>
+                          {archvizProjects[0].specs.status}
+                        </span>
+                        <span className="px-3 py-1.5 rounded-full text-xs font-mono bg-background/50 backdrop-blur-xl border border-border/30 text-muted-foreground">
+                          {archvizProjects[0].specs.year}
+                        </span>
+                      </div>
+                      
+                      <h3 className="font-display text-2xl md:text-4xl lg:text-5xl font-bold text-foreground mb-2 md:mb-3 group-hover:text-accent transition-colors duration-500">
+                        {archvizProjects[0].title}
+                      </h3>
+                      
+                      <div className="flex flex-wrap items-center gap-3 md:gap-4 text-xs md:text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1.5">
+                          <MapPin className="w-3 h-3 md:w-4 md:h-4 text-accent" />
+                          {archvizProjects[0].specs.location}
+                        </span>
+                        <span className="hidden md:inline w-1 h-1 rounded-full bg-muted-foreground/30" />
+                        <span className="hidden md:flex items-center gap-1.5">
+                          <Maximize className="w-4 h-4 text-accent" />
+                          {archvizProjects[0].specs.area}
+                        </span>
+                      </div>
+                      
+                      <div className="mt-4 md:mt-6 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-500">
+                        <span className="inline-flex items-center gap-2 text-accent font-medium">
+                          View Project <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                        </span>
+                      </div>
                     </div>
+                    
+                    {/* Corner decorations */}
+                    <div className="absolute top-4 md:top-6 left-4 md:left-6 w-8 md:w-12 h-8 md:h-12 border-t-2 border-l-2 border-accent/30 rounded-tl-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="absolute top-4 md:top-6 right-4 md:right-6 w-8 md:w-12 h-8 md:h-12 border-t-2 border-r-2 border-accent/30 rounded-tr-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   </div>
                 </Link>
-              ))}
-            </div>
-          </TabsContent>
+              )}
 
-          <TabsContent value="showreel" className="animate-fade-in">
+              {/* Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                {archvizProjects.slice(1).map((project, index) => (
+                  <Link
+                    key={project.id}
+                    to={`/archviz/${project.id}`}
+                    state={{ from: `/gallery?tab=${activeTab}` }}
+                    className="group relative rounded-2xl overflow-hidden bg-card/50 backdrop-blur-xl border border-border/30 hover:border-accent/30 transition-all duration-500 animate-fade-in"
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    <div className="aspect-[4/3] overflow-hidden relative">
+                      <img 
+                        src={project.thumbnail}
+                        alt={project.title}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+                      <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      
+                      {/* Status */}
+                      <div className="absolute top-3 md:top-4 left-3 md:left-4">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] md:text-xs font-medium backdrop-blur-xl ${
+                          project.specs.status === 'Completed'
+                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                            : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        }`}>
+                          {project.specs.status}
+                        </span>
+                      </div>
+                      
+                      {/* View button */}
+                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-accent/90 backdrop-blur-xl flex items-center justify-center shadow-xl">
+                          <Eye className="w-5 h-5 md:w-6 md:h-6 text-accent-foreground" />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 md:p-5">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                        <MapPin className="w-3 h-3 text-accent" />
+                        <span>{project.specs.location}</span>
+                      </div>
+                      <h3 className="font-display text-base md:text-lg font-bold text-foreground group-hover:text-accent transition-colors line-clamp-1">
+                        {project.title}
+                      </h3>
+                      <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                        <span>{project.specs.area}</span>
+                        <span className="w-1 h-1 rounded-full bg-border" />
+                        <span>{project.specs.type}</span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Showreel Tab */}
+          {activeTab === 'showreel' && (
             <div className="animate-fade-in">
               {/* Section Header */}
               <div className="flex flex-wrap items-center justify-between gap-4 mb-8 p-4 md:p-6 rounded-2xl bg-card/30 backdrop-blur-xl border border-border/30">
@@ -450,8 +424,8 @@ export default function Gallery() {
                 <div className="group relative rounded-2xl md:rounded-3xl overflow-hidden cursor-pointer">
                   <div className="aspect-video md:aspect-[21/9]">
                     <img 
-                      src={showreelVideos[0].thumbnail}
-                      alt={showreelVideos[0].title}
+                      src={featuredPoster}
+                      alt={featured?.title}
                       className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                     />
                   </div>
@@ -477,10 +451,12 @@ export default function Gallery() {
                       <span className="px-3 md:px-4 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground">
                         Featured
                       </span>
-                      <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono bg-background/60 backdrop-blur-xl border border-border/30">
-                        <Clock className="w-3 h-3" />
-                        {showreelVideos[0].duration}
-                      </span>
+                      {featured?.duration && (
+                        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-mono bg-background/60 backdrop-blur-xl border border-border/30">
+                          <Clock className="w-3 h-3" />
+                          {featured.duration}
+                        </span>
+                      )}
                     </div>
                     <h2 className="font-display text-xl md:text-3xl lg:text-4xl font-bold text-foreground mb-2">
                       {showreelVideos[0].title}
@@ -506,7 +482,7 @@ export default function Gallery() {
                   >
                     <div className="aspect-video overflow-hidden relative">
                       <img 
-                        src={video.thumbnail}
+                        src={video.poster ?? video.thumbnail ?? ''}
                         alt={video.title}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       />
@@ -523,12 +499,14 @@ export default function Gallery() {
                       {/* Duration & Category */}
                       <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
                         <span className="px-2.5 py-1 rounded-full text-[10px] md:text-xs font-medium bg-card/80 backdrop-blur-xl border border-border/50">
-                          {video.category}
+                          {video.category ?? 'Showreel'}
                         </span>
-                        <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] md:text-xs font-mono bg-background/80 backdrop-blur-xl">
-                          <Clock className="w-3 h-3" />
-                          {video.duration}
-                        </span>
+                        {video.duration && (
+                          <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] md:text-xs font-mono bg-background/80 backdrop-blur-xl">
+                            <Clock className="w-3 h-3" />
+                            {video.duration}
+                          </span>
+                        )}
                       </div>
                     </div>
                     
@@ -571,131 +549,9 @@ export default function Gallery() {
                 </div>
               </div>
             </div>
-          </TabsContent>
-        </Tabs>
-        {viewer && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div
-              className="fixed inset-0 bg-black/70"
-              onClick={() => setViewer(null)}
-            />
-            <div
-              className="relative max-w-[calc(100vw-40px)] max-h-[calc(100vh-40px)] w-full mx-4 flex items-center justify-center"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="absolute top-2 right-2 z-30 flex gap-2">
-                <button
-                  aria-label="Zoom out"
-                  onClick={zoomOut}
-                  className="bg-background/90 text-foreground rounded-full p-2 shadow"
-                >
-                  −
-                </button>
-                <button
-                  aria-label="Fit"
-                  onClick={fit}
-                  className="bg-background/90 text-foreground rounded-full p-2 shadow"
-                >
-                  ⤢
-                </button>
-                <button
-                  aria-label="Zoom in"
-                  onClick={zoomIn}
-                  className="bg-background/90 text-foreground rounded-full p-2 shadow"
-                >
-                  +
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewer(null)}
-                  aria-label="Close viewer"
-                  className="bg-background/90 text-foreground rounded-full p-2 shadow"
-                >
-                  ×
-                </button>
-              </div>
-
-              <div
-                ref={containerRef}
-                onWheel={onWheel}
-                onDoubleClick={onDoubleClick}
-                onMouseDown={onMouseDown}
-                onMouseMove={onMouseMove}
-                onMouseUp={onMouseUp}
-                onMouseLeave={onMouseUp}
-                onTouchStart={onTouchStart}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
-                className="w-full h-full flex items-center justify-center"
-              >
-                <img
-                  ref={imgRef}
-                  src={viewer.url}
-                  alt={viewer.title}
-                  className="max-w-full max-h-[80vh] object-contain rounded shadow-lg touch-none"
-                  style={{
-                    transform: `translate(${translate.x}px, ${translate.y}px) scale(${scale})`,
-                    transition: isPanning ? 'none' : 'transform 120ms ease-out',
-                    cursor: isPanning ? 'grabbing' : 'grab',
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </section>
     </Layout>
-  );
-}
-
-function TypewriterGallery() {
-  const words = ['Props', 'Archviz', 'Showreels'];
-  return <Typewriter words={words} loop={true} pause={1400} />;
-}
-
-function Typewriter({ words, loop = true, pause = 1200, typeSpeed = 80, deleteSpeed = 40 }: { words: string[]; loop?: boolean; pause?: number; typeSpeed?: number; deleteSpeed?: number }) {
-  const [index, setIndex] = useState(0);
-  const [display, setDisplay] = useState('');
-  const [typing, setTyping] = useState(true);
-
-  useEffect(() => {
-    let timer: number | undefined;
-    const word = words[index % words.length];
-
-    if (typing) {
-      if (display.length < word.length) {
-        timer = window.setTimeout(() => setDisplay(word.slice(0, display.length + 1)), typeSpeed);
-      } else {
-        timer = window.setTimeout(() => setTyping(false), pause);
-      }
-    } else {
-      if (display.length > 0) {
-        timer = window.setTimeout(() => setDisplay(display.slice(0, display.length - 1)), deleteSpeed);
-      } else {
-        setTyping(true);
-        setIndex((i) => i + 1);
-      }
-    }
-
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [display, typing, index, words, pause, typeSpeed, deleteSpeed]);
-
-  const longest = words.reduce((a, b) => (a.length >= b.length ? a : b), '');
-  return (
-    <span className="block text-center mb-2">
-      <span className="relative inline-block mx-auto">
-        {/* invisible widest word reserves the width and centers itself */}
-        <span className="invisible block font-display font-bold leading-tight">{longest}</span>
-
-        {/* overlay the visible typed text centered over the reserved width */}
-        <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <span className="font-display font-bold leading-tight">{display}</span>
-          <span className="inline-block w-1 h-7 bg-primary ml-3 animate-blink" />
-        </span>
-      </span>
-      <style>{`.animate-blink{animation:blink 1s steps(2,end) infinite}@keyframes blink{50%{opacity:0}}`}</style>
-    </span>
   );
 }
