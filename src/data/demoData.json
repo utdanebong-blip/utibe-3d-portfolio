@@ -427,6 +427,14 @@
     },
     {
       "id": "2",
+      "name": "ProjectManager_3",
+      "description": "Managing assets is often the most time-consuming part of any 3ds Max project—accessing, organizing, and creating scenes along with Models, Materials, Textures, IES lights, Proxies, and more can quickly eat up hours.",
+      "icon": "📦",
+      "downloadUrl": "https://drive.google.com/file/d/1zi1pQ438ejkMmvg6sjEGwX1fQfW5AZwv/view?usp=sharing",
+      "category": "3Ds Max Plugin 2014-2025"
+    },
+    {
+      "id": "3",
       "name": "Chaos Phoenix 5.23",
       "description": "Chaos® Phoenix is capable of a wide range of effects including fire, smoke, liquids, flames, explosions, rigid body simulations, ocean waves, mist and splashes to list just a few. Quick presets and fast setup make it easy to get started, and its powerful simulation engine offers complete control over more complex effects.",
       "icon": "📦",
