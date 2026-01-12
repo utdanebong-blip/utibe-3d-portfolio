@@ -218,7 +218,9 @@
         "wireframe": "https://cdnb.artstation.com/p/assets/images/images/065/870/491/small/caption-wireframe.jpg?1691444736",
         "uv": "https://cdna.artstation.com/p/assets/images/images/065/870/496/small/caption-uv-02.jpg?1691444748"
       },
-        "glb": "/assets/models/project-1-viking-helmet.glb",
+          "glb": "/assets/models/project-1-viking-helmet.glb",
+        "startDate": "2024-01-01",
+        "completedAt": "2024-01-15",
       "specs": {
         "polyCount": 2500,
         "vertexCount": 800,
@@ -250,6 +252,8 @@
         "uv": "https://cdnb.artstation.com/p/assets/images/images/048/770/329/small/caption-front-full.jpg?1650905441=crop"
       },
         "glb": "/assets/models/project-2-old-decaying-skull.glb",
+      "startDate": "2024-02-01",
+      "completedAt": "2024-02-20",
       "specs": {
         "polyCount": 3200,
         "vertexCount": 3100,
@@ -281,6 +285,8 @@
         "uv": "https://cdnb.artstation.com/p/marketplace/presentation_assets/002/919/429/large/file.jpg?1691515122"
       },
         "glb": "/assets/models/project-3-cyberpunk-vending-machine.glb",
+      "startDate": "2024-02-25",
+      "completedAt": "2024-03-10",
       "specs": {
         "polyCount": 1000,
         "vertexCount": 500,
@@ -313,6 +319,8 @@
         "uv": "https://cdna.artstation.com/p/assets/images/images/065/848/004/small/caption-pot.jpg?1691400472=crop"
       },
         "glb": "/assets/models/project-3-cyberpunk-vending-machine.glb",
+      "startDate": "2024-03-01",
+      "completedAt": "2024-03-10",
       "specs": {
         "polyCount": 1900,
         "vertexCount": 200,

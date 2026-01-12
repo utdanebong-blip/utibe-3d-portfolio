@@ -24,6 +24,8 @@ export interface Project {
     }>;
   };
   glb?: string;
+  startDate?: string;
+  completedAt?: string;
   // Optional concept used by some archviz entries
   concept?: string;
   modelUrl?: string;

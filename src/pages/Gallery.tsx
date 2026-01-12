@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Layout } from '@/components/layout';
+import { ProjectTimeline } from '@/components/gallery/ProjectTimeline';
 import { projects as projectsData, archvizProjects as archvizProjectsData, showreel as demoShowreel, productVizProjects as productVizProjectsData } from '@/hooks/usePortfolioData';
 import { 
   Box, 
@@ -34,6 +35,7 @@ export default function Gallery() {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>('props');
   const [propsLayout, setPropsLayout] = useState<'grid' | 'masonry'>('grid');
+  const [showTimeline, setShowTimeline] = useState(false);
   const projects = projectsData;
   const archvizProjects = archvizProjectsData;
   const productVizProjects = productVizProjectsData;
@@ -80,11 +82,12 @@ export default function Gallery() {
     }
 
     // Non-embeddable external links (LinkedIn etc.) open in a new tab
-    try {
-      window.open(url, '_blank', 'noopener');
-    } catch (e) {
-      location.href = url;
-    }
+        try {
+          window.open(url, '_blank', 'noopener');
+        } catch (e) {
+          // fall back to full navigation if window.open is blocked
+          window.location.href = url;
+        }
   };
 
   const getEmbedUrl = (url: string) => {
@@ -231,6 +234,13 @@ export default function Gallery() {
                   >
                     <LayoutGrid className="w-4 h-4" />
                   </button>
+                  <button
+                    onClick={() => setShowTimeline(v => !v)}
+                    className={`p-2 rounded-lg transition-colors ${showTimeline ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}
+                    title="Toggle timeline"
+                  >
+                    <Clock className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
               {/* Video Modal */}
@@ -298,6 +308,13 @@ export default function Gallery() {
                   </DialogContent>
                 )}
               </Dialog>
+
+               {/* Project Timeline */}
+              {showTimeline && (
+                <div className="mb-8 animate-fade-in">
+                  <ProjectTimeline projects={projects} />
+                </div>
+              )}
 
               {/* Props Grid */}
               <div className={`grid gap-4 md:gap-6 ${
