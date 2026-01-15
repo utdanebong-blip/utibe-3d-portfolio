@@ -13,26 +13,12 @@ export default function ArchvizVideoSection({ featuredArchviz }: { featuredArchv
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
-  const [isInView, setIsInView] = useState(false);
-
+  const [mediaReady, setMediaReady] = useState(false);
+  // Start playback on mount (do not pause on scroll)
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsInView(entry.isIntersecting);
-        if (entry.isIntersecting && videoRef.current) {
-          // attempt to play; browsers may block autoplay with sound
-          void videoRef.current.play();
-          setIsPlaying(true);
-        } else if (videoRef.current) {
-          videoRef.current.pause();
-          setIsPlaying(false);
-        }
-      },
-      { threshold: 0.3 }
-    );
-
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => observer.disconnect();
+    if (videoRef.current) {
+      void videoRef.current.play().then(() => setIsPlaying(true)).catch(() => {});
+    }
   }, []);
 
   const toggleMute = () => {
@@ -41,6 +27,61 @@ export default function ArchvizVideoSection({ featuredArchviz }: { featuredArchv
       setIsMuted((m) => !m);
     }
   };
+
+  const getVimeoId = (url?: string) => {
+    if (!url) return null;
+    const m = url.match(/(?:vimeo\.com\/(?:video\/)?)([0-9]+)/i);
+    return m ? m[1] : null;
+  };
+  const getYouTubeId = (url?: string) => {
+    if (!url) return null;
+    const m = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/i);
+    return m ? m[1] : null;
+  };
+
+  const videoSrc = featuredArchviz[0]?.video || featuredArchviz[0]?.videoUrl;
+  const vimeoId = getVimeoId(videoSrc);
+  const youTubeId = getYouTubeId(videoSrc);
+  const isVimeo = Boolean(vimeoId);
+  const isYouTube = Boolean(youTubeId);
+  const isDirectVideo = typeof videoSrc === 'string' && /\.(mp4|webm|ogg)(\?.*)?$/i.test(videoSrc);
+  const baseIframeSrc = isVimeo
+    ? `https://player.vimeo.com/video/${vimeoId}?autoplay=1&loop=1&muted=${isMuted ? 1 : 0}&playsinline=1&background=1&title=0&byline=0&portrait=0`
+    : isYouTube
+    ? `https://www.youtube.com/embed/${youTubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${youTubeId}&modestbranding=1&playsinline=1`
+    : null;
+
+  const [activeIframeSrc, setActiveIframeSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!baseIframeSrc) {
+      setActiveIframeSrc(null);
+      return;
+    }
+    setActiveIframeSrc(baseIframeSrc);
+  }, [baseIframeSrc]);
+
+  useEffect(() => {
+    const cacheKey = videoSrc;
+    if (!cacheKey) return;
+    const tryCache = async () => {
+      try {
+        if (!('caches' in window)) return;
+        const cache = await caches.open('portfolio-video-cache-v1');
+        const matched = await cache.match(cacheKey as RequestInfo);
+        if (matched) return;
+        const resp = await fetch(cacheKey.toString(), { mode: 'cors' });
+        if (resp && resp.ok) {
+          await cache.put(cacheKey as RequestInfo, resp.clone()).catch(() => {});
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    if (typeof videoSrc === 'string' && /\.(mp4|webm|ogg)(\?.*)?$/i.test(videoSrc)) {
+      void tryCache();
+    }
+  }, [videoSrc]);
 
   return (
     <section ref={sectionRef} className="py-20 md:py-32 relative overflow-hidden">
@@ -64,18 +105,55 @@ export default function ArchvizVideoSection({ featuredArchviz }: { featuredArchv
         {/* Video Showcase */}
         <div className="relative rounded-[2rem] overflow-hidden mb-8 group">
           <div className="aspect-[21/9] relative">
-            <video
-              ref={videoRef}
-              className="w-full h-full object-cover"
-              muted={isMuted}
-              autoPlay
-              loop
-              playsInline
-              preload="auto"
-              poster={featuredArchviz[0]?.thumbnail}
-            >
-              <source src={featuredArchviz[0]?.video || '/assets/archviz.mp4'} type="video/mp4" />
-            </video>
+            {/* Poster always visible until mediaReady */}
+            <img
+              src={featuredArchviz[0]?.thumbnail}
+              alt={featuredArchviz[0]?.title || 'Archviz poster'}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${mediaReady ? 'opacity-0' : 'opacity-100'}`}
+            />
+
+            {isVimeo && activeIframeSrc ? (
+              <iframe
+                title={featuredArchviz[0]?.title || 'Archviz'}
+                src={activeIframeSrc}
+                className="absolute left-[-15%] top-[-15%] w-[130%] h-[130%]"
+                frameBorder="0"
+                allow="autoplay; fullscreen; picture-in-picture"
+                allowFullScreen
+                onLoad={(e) => {
+                  try {(e.currentTarget as HTMLIFrameElement).dataset.loaded = '1';} catch (err) {}
+                  setMediaReady(true);
+                }}
+              />
+            ) : isDirectVideo && videoSrc ? (
+              <video
+                ref={videoRef}
+                className="absolute inset-0 w-full h-full object-cover"
+                muted={isMuted}
+                autoPlay
+                loop
+                playsInline
+                preload="auto"
+                poster={featuredArchviz[0]?.thumbnail}
+                onCanPlayThrough={() => setMediaReady(true)}
+                onPlaying={() => setMediaReady(true)}
+              >
+                <source src={videoSrc} />
+              </video>
+            ) : isYouTube && activeIframeSrc ? (
+              <iframe
+                title={featuredArchviz[0]?.title || 'Archviz'}
+                src={activeIframeSrc}
+                className="absolute left-[-15%] top-[-15%] w-[130%] h-[130%]"
+                frameBorder="0"
+                allow="autoplay; fullscreen; picture-in-picture"
+                allowFullScreen
+                onLoad={(e) => {
+                  try {(e.currentTarget as HTMLIFrameElement).dataset.loaded = '1';} catch (err) {}
+                  setMediaReady(true);
+                }}
+              />
+            ) : null}
 
             <div className="absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />

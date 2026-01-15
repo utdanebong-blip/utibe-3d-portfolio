@@ -3,7 +3,7 @@ import { Layout } from '@/components/layout';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Box, Sparkles, Download, Calendar, Clock, ChevronRight, Palette, Layers, Lightbulb, GraduationCap, Gamepad2, Zap, Building2, MapPin, Briefcase, Package, Star, ArrowUpRight, BookOpen, Play } from 'lucide-react';
 import { projects, plugins, posts, archvizProjects, productVizProjects, showreel } from '@/hooks/usePortfolioData';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import useInView from '@/hooks/useInView';
 import { cn } from '@/lib/utils';
 import ShowreelVideoSection from '@/components/ShowreelVideoSection';
@@ -25,6 +25,239 @@ function HeroText() {
       Crafting forms in
       <span className="block text-2xl md:text-4xl lg:text-2xl font-semibold text-primary text-glow-green mx-2">3 DIMENSION.</span>
     </p>
+  );
+}
+
+function ScrollPauseHandler({ productRef, videoLibRef, videosLoaded, setVideosLoaded }: { productRef: React.RefObject<HTMLElement | null>; videoLibRef: React.RefObject<HTMLElement | null>; videosLoaded: boolean; setVideosLoaded: (v: boolean) => void; }) {
+  const wheelHandlerRef = useRef<((e: WheelEvent) => void) | null>(null);
+  const touchStartRef = useRef<number | null>(null);
+  const [isBlocking, setIsBlocking] = useState(false);
+  const [userTriedScroll, setUserTriedScroll] = useState(false);
+
+  const enableScroll = useCallback(() => {
+    const h = wheelHandlerRef.current;
+    if (h) {
+      window.removeEventListener('wheel', h as any, { passive: false } as any);
+      window.removeEventListener('touchmove', h as any, { passive: false } as any);
+      wheelHandlerRef.current = null;
+    }
+    try {
+      document.documentElement.style.overscrollBehavior = '';
+      document.documentElement.style.touchAction = '';
+    } catch (e) {}
+  }, []);
+
+  const disableDownwardScroll = useCallback(() => {
+    if (wheelHandlerRef.current) return;
+    const handler = (e: WheelEvent) => {
+      if (e.deltaY > 0) {
+        e.preventDefault();
+      }
+    };
+    wheelHandlerRef.current = handler;
+    window.addEventListener('wheel', handler as any, { passive: false } as any);
+    window.addEventListener('touchmove', handler as any, { passive: false } as any);
+    try {
+      document.documentElement.style.overscrollBehavior = 'contain';
+      document.documentElement.style.touchAction = 'pan-y';
+    } catch (e) {}
+  }, []);
+
+  useEffect(() => {
+    const root = videoLibRef.current;
+    if (!root) return;
+
+    // Only consider the Showreel (first section) for the blocking rule
+    const checkAndAttachMediaListeners = () => {
+      if (!root) return;
+      const sections = Array.from(root.querySelectorAll(':scope > section')) as HTMLElement[];
+      const showreelSection = sections[0];
+      if (!showreelSection) return;
+
+      // Attach iframe load listeners
+      const iframes = Array.from(showreelSection.querySelectorAll('iframe')) as HTMLIFrameElement[];
+      for (const iframe of iframes) {
+        if ((iframe as any).dataset && (iframe as any).dataset.loaded === '1') {
+          setVideosLoaded(true);
+          setIsBlocking(false);
+          return;
+        }
+        if (!iframe.dataset.__listener) {
+          const onload = () => {
+            iframe.dataset.loaded = '1';
+            setVideosLoaded(true);
+            setIsBlocking(false);
+          };
+          iframe.addEventListener('load', onload, { once: true });
+          iframe.dataset.__listener = '1';
+        }
+      }
+
+      // Attach video canplaythrough listeners
+      const videos = Array.from(showreelSection.querySelectorAll('video')) as HTMLVideoElement[];
+      for (const v of videos) {
+        if (v.readyState >= 3) {
+          setVideosLoaded(true);
+          setIsBlocking(false);
+          return;
+        }
+        if (!v.dataset.__listener) {
+          const onCan = () => {
+            setVideosLoaded(true);
+            setIsBlocking(false);
+          };
+          v.addEventListener('canplaythrough', onCan, { once: true });
+          v.dataset.__listener = '1';
+        }
+      }
+    };
+
+    const isShowreelLoaded = () => {
+      if (!root) return false;
+      const sections = Array.from(root.querySelectorAll(':scope > section')) as HTMLElement[];
+      const showreelSection = sections[0];
+      if (!showreelSection) return false;
+      const iframes = Array.from(showreelSection.querySelectorAll('iframe')) as HTMLIFrameElement[];
+      for (const iframe of iframes) {
+        if ((iframe as any).dataset && (iframe as any).dataset.loaded === '1') return true;
+      }
+      const videos = Array.from(showreelSection.querySelectorAll('video')) as HTMLVideoElement[];
+      for (const v of videos) {
+        if (v.readyState >= 3) return true;
+      }
+      return false;
+    };
+
+    const mo = new MutationObserver(() => checkAndAttachMediaListeners());
+    mo.observe(root, { childList: true, subtree: true });
+
+    // Block downward scroll (wheel/touch) when NONE of the video elements are visible
+    // For our rule we check only the Showreel section visibility
+    const isShowreelInView = () => {
+      const container = videoLibRef?.current || root;
+      if (!container) return false;
+      const sections = Array.from(container.querySelectorAll(':scope > section')) as HTMLElement[];
+      const showreelSection = sections[0];
+      if (!showreelSection) return false;
+      const medias = Array.from(showreelSection.querySelectorAll('video, iframe')) as (HTMLVideoElement | HTMLIFrameElement)[];
+      if (!medias.length) return false;
+      for (const m of medias) {
+        const r = m.getBoundingClientRect();
+        if (r.top < window.innerHeight && r.bottom > 0) return true;
+      }
+      return false;
+    };
+
+    const wheelHandler = (e: WheelEvent) => {
+      if (e.deltaY <= 0) return; // only block downward scroll
+      const productEl = productRef?.current;
+      if (!productEl) return;
+      const pRect = productEl.getBoundingClientRect();
+      const proximity = 120; // only trigger when product section is nearly revealed
+      // Only start blocking when product section is coming into view (close enough)
+      if (pRect.top > window.innerHeight + proximity) return;
+
+      // If the showreel media are visible or already loaded, allow scroll
+      const showLoaded = isShowreelLoaded();
+      const showVisible = isShowreelInView();
+      if (showLoaded || showVisible || videosLoaded) {
+        setUserTriedScroll(false);
+        setIsBlocking(false);
+        return;
+      }
+
+      // Block downward scroll and show message only when trying to pass the product render section
+      e.preventDefault();
+      setIsBlocking(true);
+      setUserTriedScroll(true);
+    };
+
+    const touchStart = (ev: TouchEvent) => {
+      touchStartRef.current = ev.touches?.[0]?.clientY ?? null;
+    };
+
+    const touchMove = (ev: TouchEvent) => {
+      const startY = touchStartRef.current;
+      if (startY == null) return;
+      const moveY = ev.touches?.[0]?.clientY ?? startY;
+      const delta = startY - moveY; // positive when swiping up (scroll down)
+      if (delta <= 0) return; // only block downward scroll
+      const productEl = productRef?.current;
+      if (!productEl) return;
+      const pRect = productEl.getBoundingClientRect();
+      const proximity = 120;
+      if (pRect.top > window.innerHeight + proximity) return;
+
+      const showLoaded = isShowreelLoaded();
+      const showVisible = isShowreelInView();
+      if (showLoaded || showVisible || videosLoaded) {
+        setUserTriedScroll(false);
+        setIsBlocking(false);
+        return;
+      }
+
+      ev.preventDefault();
+      setIsBlocking(true);
+      setUserTriedScroll(true);
+    };
+
+    window.addEventListener('wheel', wheelHandler, { passive: false } as any);
+    window.addEventListener('touchstart', touchStart as any, { passive: true } as any);
+    window.addEventListener('touchmove', touchMove as any, { passive: false } as any);
+
+    // initial check
+    checkAndAttachMediaListeners();
+
+    // update blocking status on scroll/resize so the notification appears as soon as user approaches
+    const updateBlockingStatus = () => {
+      if (videosLoaded) {
+        setIsBlocking(false);
+        setUserTriedScroll(false);
+        return;
+      }
+      const productEl = productRef?.current;
+      if (!productEl) {
+        setIsBlocking(false);
+        return;
+      }
+      const pRect = productEl.getBoundingClientRect();
+      const proximity = 120;
+      if (pRect.top <= window.innerHeight + proximity) {
+        const showLoaded = isShowreelLoaded();
+        const showVisible = isShowreelInView();
+        setIsBlocking(!(showLoaded || showVisible || videosLoaded));
+        return;
+      }
+      setIsBlocking(false);
+    };
+
+    window.addEventListener('scroll', updateBlockingStatus, { passive: true } as any);
+    window.addEventListener('resize', updateBlockingStatus, { passive: true } as any);
+    updateBlockingStatus();
+
+    // reset user tried scroll flag when videos load
+    if (videosLoaded) setUserTriedScroll(false);
+
+    return () => {
+      mo.disconnect();
+      window.removeEventListener('wheel', wheelHandler as any);
+      window.removeEventListener('touchstart', touchStart as any);
+      window.removeEventListener('touchmove', touchMove as any);
+      window.removeEventListener('scroll', updateBlockingStatus as any);
+      window.removeEventListener('resize', updateBlockingStatus as any);
+    };
+  }, [videoLibRef, videosLoaded, setVideosLoaded]);
+
+  return (
+    <>
+      {isBlocking && userTriedScroll && !videosLoaded && (
+        <div className="fixed left-1/2 bottom-24 -translate-x-1/2 z-50">
+          <div className="px-5 py-3 rounded-full bg-black/80 text-white text-sm font-medium shadow-lg">
+            Loading something awesome — please wait
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -67,6 +300,9 @@ export default function Home() {
   const featuredArchviz = archvizProjects.slice(0, 2);
   const featuredProductViz = productVizProjects.slice(0, 3);
   const featuredShowreel = showreel.slice(0, 1);
+  const videoLibRef = useRef<HTMLElement | null>(null);
+  const productRef = useRef<HTMLElement | null>(null);
+  const [videosLoaded, setVideosLoaded] = useState(false);
 
   return (
     <Layout>
@@ -273,7 +509,7 @@ export default function Home() {
           </div>
         
       {/* ProductViz Section - Card Stack */}
-      <section className="py-20 md:py-32 relative overflow-hidden">
+      <section ref={productRef as any} className="py-20 md:py-32 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-background via-neon-orange/[0.02] to-background" />
         
         <div className="container mx-auto px-4 relative">
@@ -374,12 +610,14 @@ export default function Home() {
               </div>
             </Link>
           </div>
-              {/* Showreel Section - Cinematic Reels */}
-            <ShowreelVideoSection featuredShowreel={featuredShowreel} />
-            {/* Archviz Section - Cinematic with Video */}
-            <ArchvizVideoSection featuredArchviz={featuredArchviz} /> 
-            {/* ProductViz Section - Cinematic with Video (shared UI) */}
-            <ProductVizVideoSection featuredProductViz={featuredProductViz} />
+                    {/* Showreel Section - Cinematic Reels */}
+                    <div ref={videoLibRef as any}>
+                      <ShowreelVideoSection featuredShowreel={featuredShowreel} />
+                      {/* Archviz Section - Cinematic with Video */}
+                      <ArchvizVideoSection featuredArchviz={featuredArchviz} /> 
+                      {/* ProductViz Section - Cinematic with Video (shared UI) */}
+                      <ProductVizVideoSection featuredProductViz={featuredProductViz} />
+                    </div>
             <div className="flex items-center gap-4 mb-6">
                 <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 border border-primary/20">
                   <Play className="w-6 h-6 text-primary" />
@@ -388,6 +626,9 @@ export default function Home() {
               </div>
         </div>
       </section>
+
+      {/* Scroll pause logic: pause downward scroll when user is near the video library and media aren't loaded yet */}
+      <ScrollPauseHandler productRef={productRef} videoLibRef={videoLibRef} videosLoaded={videosLoaded} setVideosLoaded={setVideosLoaded} />
 
       {/* Skills Overview */}
       <section className="py-24 border-y border-border/30">
