@@ -22,9 +22,10 @@ export default function ProductVizVideoSection({ featuredProductViz }: { feature
   }, []);
 
   const toggleMute = () => {
+    setIsMuted((m) => !m);
     if (videoRef.current) {
       videoRef.current.muted = !videoRef.current.muted;
-      setIsMuted((m) => !m);
+      try { void videoRef.current.play(); } catch (e) {}
     }
   };
 
@@ -102,7 +103,7 @@ export default function ProductVizVideoSection({ featuredProductViz }: { feature
         </div>
 
         <div className="relative rounded-[1.5rem] overflow-hidden mb-6 group">
-          <div className="aspect-[21/9] relative">
+          <div className="aspect-[4/3] md:aspect-[21/9] relative">
             {/* Poster always visible until mediaReady */}
             <img
               src={featuredProductViz[0]?.thumbnail}

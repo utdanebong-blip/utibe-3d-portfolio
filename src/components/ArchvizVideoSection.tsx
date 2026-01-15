@@ -22,9 +22,10 @@ export default function ArchvizVideoSection({ featuredArchviz }: { featuredArchv
   }, []);
 
   const toggleMute = () => {
+    setIsMuted((m) => !m);
     if (videoRef.current) {
       videoRef.current.muted = !videoRef.current.muted;
-      setIsMuted((m) => !m);
+      try { void videoRef.current.play(); } catch (e) {}
     }
   };
 
@@ -104,7 +105,7 @@ export default function ArchvizVideoSection({ featuredArchviz }: { featuredArchv
 
         {/* Video Showcase */}
         <div className="relative rounded-[2rem] overflow-hidden mb-8 group">
-          <div className="aspect-[21/9] relative">
+          <div className="aspect-[4/3] md:aspect-[21/9] relative">
             {/* Poster always visible until mediaReady */}
             <img
               src={featuredArchviz[0]?.thumbnail}
