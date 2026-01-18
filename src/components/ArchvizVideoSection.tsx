@@ -11,6 +11,7 @@ function cn(...classes: (string | boolean | undefined)[]) {
 export default function ArchvizVideoSection({ featuredArchviz }: { featuredArchviz: any[] }) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [mediaReady, setMediaReady] = useState(false);
@@ -22,10 +23,29 @@ export default function ArchvizVideoSection({ featuredArchviz }: { featuredArchv
   }, []);
 
   const toggleMute = () => {
-    setIsMuted((m) => !m);
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+
     if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
+      videoRef.current.muted = newMuted;
       try { void videoRef.current.play(); } catch (e) {}
+      return;
+    }
+
+    if (iframeRef.current) {
+      try {
+        const win = iframeRef.current.contentWindow;
+        if (!win) return;
+        if (isYouTube) {
+          const cmd = JSON.stringify({ event: 'command', func: newMuted ? 'mute' : 'unMute', args: [] });
+          win.postMessage(cmd, '*');
+        }
+        if (isVimeo) {
+          const vol = newMuted ? 0 : 1;
+          const msg = JSON.stringify({ method: 'setVolume', value: vol });
+          win.postMessage(msg, '*');
+        }
+      } catch (e) {}
     }
   };
 
@@ -46,10 +66,12 @@ export default function ArchvizVideoSection({ featuredArchviz }: { featuredArchv
   const isVimeo = Boolean(vimeoId);
   const isYouTube = Boolean(youTubeId);
   const isDirectVideo = typeof videoSrc === 'string' && /\.(mp4|webm|ogg)(\?.*)?$/i.test(videoSrc);
+  const initialMuted = useRef(isMuted).current;
+
   const baseIframeSrc = isVimeo
-    ? `https://player.vimeo.com/video/${vimeoId}?autoplay=1&loop=1&muted=${isMuted ? 1 : 0}&playsinline=1&background=1&title=0&byline=0&portrait=0`
+    ? `https://player.vimeo.com/video/${vimeoId}?autoplay=1&loop=1&muted=${initialMuted ? 1 : 0}&playsinline=1&background=1&title=0&byline=0&portrait=0&api=1`
     : isYouTube
-    ? `https://www.youtube.com/embed/${youTubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${youTubeId}&modestbranding=1&playsinline=1`
+    ? `https://www.youtube.com/embed/${youTubeId}?autoplay=1&enablejsapi=1&mute=${initialMuted ? 1 : 0}&loop=1&playlist=${youTubeId}&modestbranding=1&playsinline=1`
     : null;
 
   const [activeIframeSrc, setActiveIframeSrc] = useState<string | null>(null);
@@ -60,7 +82,8 @@ export default function ArchvizVideoSection({ featuredArchviz }: { featuredArchv
       return;
     }
     setActiveIframeSrc(baseIframeSrc);
-  }, [baseIframeSrc]);
+  // intentionally exclude isMuted so iframe isn't recreated on mute toggle
+  }, [videoSrc, vimeoId, youTubeId]);
 
   useEffect(() => {
     const cacheKey = videoSrc;
@@ -115,6 +138,7 @@ export default function ArchvizVideoSection({ featuredArchviz }: { featuredArchv
 
             {isVimeo && activeIframeSrc ? (
               <iframe
+                ref={iframeRef}
                 title={featuredArchviz[0]?.title || 'Archviz'}
                 src={activeIframeSrc}
                 className="absolute left-[-15%] top-[-15%] w-[130%] h-[130%]"
@@ -143,6 +167,7 @@ export default function ArchvizVideoSection({ featuredArchviz }: { featuredArchv
               </video>
             ) : isYouTube && activeIframeSrc ? (
               <iframe
+                ref={iframeRef}
                 title={featuredArchviz[0]?.title || 'Archviz'}
                 src={activeIframeSrc}
                 className="absolute left-[-15%] top-[-15%] w-[130%] h-[130%]"

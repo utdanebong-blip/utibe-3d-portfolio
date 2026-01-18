@@ -11,6 +11,7 @@ function cn(...classes: (string | boolean | undefined)[]) {
 export default function ShowreelVideoSection({ featuredShowreel }: { featuredShowreel: any[] }) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
   const [mediaReady, setMediaReady] = useState(false);
@@ -22,10 +23,37 @@ export default function ShowreelVideoSection({ featuredShowreel }: { featuredSho
   }, []);
 
   const toggleMute = () => {
-    setIsMuted((m) => !m);
+    const newMuted = !isMuted;
+    setIsMuted(newMuted);
+
+    // Direct <video> element: toggle muted property
     if (videoRef.current) {
-      videoRef.current.muted = !videoRef.current.muted;
+      videoRef.current.muted = newMuted;
       try { void videoRef.current.play(); } catch (e) {}
+      return;
+    }
+
+    // For iframe embeds (YouTube / Vimeo) - send postMessage commands to avoid reloading iframe
+    if (iframeRef.current) {
+      try {
+        const win = iframeRef.current.contentWindow;
+        if (!win) return;
+
+        // YouTube expects event command messages
+        if (isYouTube) {
+          const cmd = JSON.stringify({ event: 'command', func: newMuted ? 'mute' : 'unMute', args: [] });
+          win.postMessage(cmd, '*');
+        }
+
+        // Vimeo accepts { method: 'setVolume', value: 0|1 }
+        if (isVimeo) {
+          const vol = newMuted ? 0 : 1;
+          const msg = JSON.stringify({ method: 'setVolume', value: vol });
+          win.postMessage(msg, '*');
+        }
+      } catch (e) {
+        // ignore
+      }
     }
   };
 
@@ -46,22 +74,26 @@ export default function ShowreelVideoSection({ featuredShowreel }: { featuredSho
   const youTubeId = getYouTubeId(videoSrc);
   const isVimeo = Boolean(vimeoId);
   const isYouTube = Boolean(youTubeId);
+  // Use initial muted value for iframe src so we don't force-recreate iframe when toggling mute
+  const initialMuted = useRef(isMuted).current;
+
   const baseIframeSrc = isVimeo
-    ? `https://player.vimeo.com/video/${vimeoId}?autoplay=1&loop=1&muted=${isMuted ? 1 : 0}&playsinline=1&background=1&title=0&byline=0&portrait=0`
+    ? `https://player.vimeo.com/video/${vimeoId}?autoplay=1&loop=1&muted=${initialMuted ? 1 : 0}&playsinline=1&background=1&title=0&byline=0&portrait=0&api=1`
     : isYouTube
-    ? `https://www.youtube.com/embed/${youTubeId}?autoplay=1&mute=${isMuted ? 1 : 0}&loop=1&playlist=${youTubeId}&modestbranding=1&playsinline=1`
+    ? `https://www.youtube.com/embed/${youTubeId}?autoplay=1&enablejsapi=1&mute=${initialMuted ? 1 : 0}&loop=1&playlist=${youTubeId}&modestbranding=1&playsinline=1`
     : null;
 
   const [activeIframeSrc, setActiveIframeSrc] = useState<string | null>(null);
 
-  // Always attach iframe src when available so embeds play regardless of scroll
+  // Attach iframe src when source changes (do not depend on isMuted so iframe isn't recreated on mute toggles)
   useEffect(() => {
     if (!baseIframeSrc) {
       setActiveIframeSrc(null);
       return;
     }
     setActiveIframeSrc(baseIframeSrc);
-  }, [baseIframeSrc]);
+  // Intentionally excluding isMuted so toggling mute doesn't recreate iframe
+  }, [videoSrc, vimeoId, youTubeId]);
 
   // When a direct video URL becomes visible, start background fetch to cache the full video
   useEffect(() => {
@@ -118,6 +150,7 @@ export default function ShowreelVideoSection({ featuredShowreel }: { featuredSho
 
             {isVimeo && activeIframeSrc ? (
               <iframe
+                ref={iframeRef}
                 title={featuredShowreel[0]?.title || 'Showreel'}
                 src={activeIframeSrc}
                 className="absolute left-[-15%] top-[-15%] w-[130%] h-[130%]"
