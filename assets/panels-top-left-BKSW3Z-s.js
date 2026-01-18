@@ -1,11 +1,11 @@
-import{c as t}from"./index-BAird3j2.js";/**
+import{c as e}from"./index-JDD0otFY.js";/**
  * @license lucide-react v0.462.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const o=t("ArrowLeft",[["path",{d:"m12 19-7-7 7-7",key:"1l729n"}],["path",{d:"M19 12H5",key:"x3x0zl"}]]);/**
+ */const o=e("ChevronLeft",[["path",{d:"m15 18-6-6 6-6",key:"1wnfg3"}]]);/**
  * @license lucide-react v0.462.0 - ISC
  *
  * This source code is licensed under the ISC license.
  * See the LICENSE file in the root directory of this source tree.
- */const r=t("ChevronRight",[["path",{d:"m9 18 6-6-6-6",key:"mthhwq"}]]);export{o as A,r as C};
+ */const a=e("PanelsTopLeft",[["rect",{width:"18",height:"18",x:"3",y:"3",rx:"2",key:"afitv7"}],["path",{d:"M3 9h18",key:"1pudct"}],["path",{d:"M9 21V9",key:"1oto5p"}]]);export{o as C,a as P};
