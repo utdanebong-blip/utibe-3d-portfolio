@@ -12,15 +12,29 @@ function normalizePaths(obj: any) {
   if (Array.isArray(obj)) {
     return obj.map((item) => normalizePaths(item));
   }
-  const out: any = Array.isArray(obj) ? [] : {};
+  const out: any = {};
+
+  // helper to detect asset-like strings (images, models, docs, etc.)
+  const isAssetString = (s: string) => {
+    if (!s || typeof s !== 'string') return false;
+    const lower = s.toLowerCase();
+    // obvious externals
+    if (lower.startsWith('http') || lower.startsWith('mailto:') || lower.startsWith('data:')) return false;
+    // file extensions we consider assets
+    if (/[.](png|jpe?g|svg|gif|webp|mp4|webm|glb|gltf|pdf|ico|jpg)$/i.test(lower)) return true;
+    // explicit assets folder references
+    if (lower.startsWith('/assets') || lower.startsWith('assets/')) return true;
+    // common poster/thumbnail names without extension check
+    if (/poster|thumb|cover|profile|showreel/i.test(lower) && lower.length < 64) return true;
+    return false;
+  };
+
   for (const key of Object.keys(obj)) {
     const val = obj[key];
     if (typeof val === 'string') {
       const s = val as string;
-      const isExternal = s.startsWith('http') || s.startsWith('mailto:') || s.startsWith('data:');
       const alreadyBase = s.startsWith(BASE);
-      if (!isExternal && !alreadyBase) {
-        // prefix relative or root paths with BASE
+      if (isAssetString(s) && !alreadyBase) {
         out[key] = `${BASE}${s.replace(/^\/?/, '')}`;
         continue;
       }
