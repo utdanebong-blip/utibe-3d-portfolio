@@ -4,6 +4,7 @@ import { getPost, posts } from '@/hooks/usePortfolioData';
 import { Calendar, Tag, ArrowLeft, Clock, Share2, Bookmark, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import usePageMeta from '@/hooks/usePageMeta';
 
 export default function BlogPost() {
   const { id } = useParams();
@@ -26,6 +27,9 @@ export default function BlogPost() {
   // Estimate reading time
   const wordCount = post.content.split(/\s+/).length;
   const readingTime = Math.ceil(wordCount / 200);
+
+  // set meta for sharing
+  usePageMeta({ title: post.title, description: post.excerpt, image: post.coverImage });
 
   // Get related posts
   const relatedPosts = posts

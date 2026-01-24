@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Layout } from '@/components/layout';
 import { getProject } from '@/hooks/usePortfolioData';
 import ModelViewerPlaceholder from '@/components/3d/ModelViewerPlaceholder';
+import usePageMeta from '@/hooks/usePageMeta';
 import { ArrowLeft, Box, Layers, Grid3X3, RotateCcw, ChevronRight, Download, Cpu, Package, Palette, HardDrive, ZoomIn, ZoomOut, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -17,6 +18,7 @@ type ViewMode = 'rendered' | 'rendered2' | 'topology' | 'uv' | '3d';
 export default function ProjectDetail() {
   const { id } = useParams();
   const project = getProject(id || '');
+  usePageMeta({ title: project?.title || 'Project', description: project?.excerpt || '', image: project?.images?.[0] || project?.coverImage });
   const [viewMode, setViewMode] = useState<ViewMode>('rendered');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoom, setZoom] = useState(1);
