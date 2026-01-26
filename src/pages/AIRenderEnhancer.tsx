@@ -32,7 +32,7 @@ const features = [
   },
   {
     icon: Sparkles,
-    title: 'AI-Powered Enhancement',
+    title: 'Powered Enhancement',
     description: 'Advanced neural network upscaling that preserves architectural details while removing noise and artifacts.',
     accent: 'neon-cyan'
   },
@@ -45,7 +45,7 @@ const features = [
   {
     icon: Shield,
     title: 'Non-Destructive Processing',
-    description: 'Your original renders stay untouched. The AI enhances without overwriting, so you never lose your source files.',
+    description: 'Your original renders stay untouched. The enhances without overwriting, so you never lose your source files.',
     accent: 'neon-green'
   },
   {
@@ -70,7 +70,7 @@ const features = [
 
 // All features included (free testing version)
 const allFeatures = [
-  'AI Enhancement (Unlimited Resolution)',
+  'Enhancement (Unlimited Resolution)',
   'Reference Image Matching',
   'Before/After Comparison',
   'Text & Image Watermarks',
@@ -135,7 +135,7 @@ export default function AIRenderEnhancer() {
 
           {/* Title */}
           <h1 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight">
-            <span className="text-foreground">AI Archviz</span>
+            <span className="text-foreground">Archviz</span>
             <br />
             <span className="bg-gradient-to-r from-primary via-neon-cyan to-primary bg-clip-text text-transparent">
               Render Enhancer
@@ -143,7 +143,7 @@ export default function AIRenderEnhancer() {
           </h1>
 
           <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto mb-8 leading-relaxed">
-            Transform your architectural renders with AI-powered enhancement. 
+            Transform your architectural renders with GPU-powered enhancement. 
             <span className="text-foreground font-medium"> Non-destructive</span>, 
             <span className="text-foreground font-medium"> GPU-accelerated</span>, and 
             <span className="text-foreground font-medium"> batch-ready</span>.
@@ -218,7 +218,7 @@ export default function AIRenderEnhancer() {
               ORIGINAL
             </div>
             <div className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-primary/80 backdrop-blur-sm text-primary-foreground text-xs font-mono">
-              AI ENHANCED
+              ENHANCED
             </div>
           </div>
         </div>
@@ -301,7 +301,7 @@ export default function AIRenderEnhancer() {
             <div className="text-center mb-8">
               <div className="flex items-baseline justify-center gap-1 mb-2">
                 <span className="font-display text-6xl font-bold text-neon-green">$0</span>
-                <span className="text-muted-foreground text-lg">/forever</span>
+                <span className="text-muted-foreground text-lg">/Test version</span>
               </div>
               <p className="text-muted-foreground">Free for testing purposes</p>
             </div>
@@ -379,7 +379,7 @@ export default function AIRenderEnhancer() {
               </h2>
               
               <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
-                Drop any reference image and let AI match its color grading, lighting mood, and overall aesthetic. 
+                Drop any reference image and let AE match its color grading, lighting mood, and overall aesthetic. 
                 Perfect for maintaining consistency across project renders or matching a specific visual style.
               </p>
               
@@ -452,7 +452,7 @@ export default function AIRenderEnhancer() {
             Ready to Enhance Your Renders?
           </h2>
           <p className="text-muted-foreground text-xl mb-10 max-w-2xl mx-auto">
-            Join archviz professionals using AI Render Enhancer to deliver stunning visuals. Free to download and test!
+            Join archviz professionals using Archviz Enhancer to deliver stunning visuals. Free to download and test!
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">

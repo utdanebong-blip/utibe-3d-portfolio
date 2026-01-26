@@ -871,12 +871,12 @@ function AIEnhancerPromoSection() {
             </div>
 
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold text-foreground mb-6 leading-tight">
-              AI Archviz
+              Archviz
               <span className="block text-primary text-glow-green">Render Enhancer</span>
             </h2>
 
             <p className="font-body text-lg text-muted-foreground mb-8 max-w-lg leading-relaxed">
-              Transform your architectural renders with AI-powered enhancement. 
+              Transform your architectural renders with GPU-powered enhancement. 
               Non-destructive processing, GPU acceleration, and batch capabilities — 
               all in one powerful tool.
             </p>
@@ -956,9 +956,11 @@ function AIEnhancerPromoSection() {
               {/* Feature Checkmarks */}
               <div className="space-y-3">
                 {[
-                  'AI-powered enhancement preserves details',
+                  'GPU-powered enhancement preserves details',
                   'Process hundreds of images in batch',
-                  'Add text & image watermarks easily'
+                  'Add text & image watermarks easily',
+                  'History fallback easily',
+                  'CPU fallback easily'
                 ].map((feature, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <div className="w-5 h-5 rounded-full bg-neon-green/20 flex items-center justify-center flex-shrink-0">
